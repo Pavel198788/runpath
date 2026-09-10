@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Settings, UserProfile } from './entities'
+import type { Plan, Settings, UserProfile, Workout, WorkoutLog } from './entities'
 
 /**
  * Локальная база (IndexedDB через Dexie). Единственный источник истины.
@@ -14,6 +14,9 @@ import type { Settings, UserProfile } from './entities'
 export class RunPathDB extends Dexie {
   profiles!: EntityTable<UserProfile, 'id'>
   settings!: EntityTable<Settings, 'id'>
+  plans!: EntityTable<Plan, 'id'>
+  workouts!: EntityTable<Workout, 'id'>
+  workoutLogs!: EntityTable<WorkoutLog, 'id'>
 
   constructor(name = 'runpath') {
     super(name)
@@ -21,6 +24,15 @@ export class RunPathDB extends Dexie {
     this.version(1).stores({
       profiles: 'id, updatedAt, deletedAt',
       settings: 'id, updatedAt, deletedAt',
+    })
+
+    // v2 (A1): план, тренировки и журнал.
+    this.version(2).stores({
+      profiles: 'id, updatedAt, deletedAt',
+      settings: 'id, updatedAt, deletedAt',
+      plans: 'id, isActive, updatedAt, deletedAt',
+      workouts: 'id, planId, date, weekIndex, updatedAt, deletedAt',
+      workoutLogs: 'id, workoutId, date, updatedAt, deletedAt',
     })
   }
 }

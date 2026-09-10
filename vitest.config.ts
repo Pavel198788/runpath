@@ -8,6 +8,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'content/**/*.test.ts'],
     css: false,
+    // Ленивые чанки экранов в jsdom грузятся секунды при параллельном прогоне.
+    testTimeout: 20_000,
+    hookTimeout: 40_000,
   },
   resolve: {
     alias: {

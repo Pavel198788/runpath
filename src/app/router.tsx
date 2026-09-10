@@ -9,6 +9,11 @@ const PlanPage = lazy(() => import('@/features/plan/PlanPage'))
 const ProgressPage = lazy(() => import('@/features/progress/ProgressPage'))
 const MorePage = lazy(() => import('@/features/more/MorePage'))
 const OnboardingPage = lazy(() => import('@/features/onboarding/OnboardingPage'))
+const WorkoutPage = lazy(() => import('@/features/workout/WorkoutPage'))
+const TimerPage = lazy(() => import('@/features/workout/TimerPage'))
+const LogWorkoutPage = lazy(() => import('@/features/workout/LogWorkoutPage'))
+const HistoryPage = lazy(() => import('@/features/history/HistoryPage'))
+const LogDetailPage = lazy(() => import('@/features/history/LogDetailPage'))
 
 export const router = createBrowserRouter([
   {
@@ -20,7 +25,13 @@ export const router = createBrowserRouter([
       { path: '/progress', element: <ProgressPage /> },
       { path: '/more', element: <MorePage /> },
       { path: '/onboarding', element: <OnboardingPage /> },
+      { path: '/workout/:id', element: <WorkoutPage /> },
+      { path: '/log/new', element: <LogWorkoutPage /> },
+      { path: '/history', element: <HistoryPage /> },
+      { path: '/history/:id', element: <LogDetailPage /> },
       { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },
+  // Таймер — без нижней навигации, на весь экран.
+  { path: '/workout/:id/timer', element: <TimerPage /> },
 ])

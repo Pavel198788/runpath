@@ -1,22 +1,50 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Button, Card, CardText, CardTitle, Page, PageHeader } from '@/ui'
+import { Play, PenLine } from 'lucide-react'
+import { Badge, Button, Card, CardText, CardTitle, Page, PageHeader } from '@/ui'
 import { getProfile } from '@/data/repositories/profileRepo'
+import { getActivePlan } from '@/data/repositories/planRepo'
+import { db } from '@/data/db'
+import { todayIso } from '@/domain/dates/dates'
+import type { Workout } from '@/data/entities'
+import {
+  humanDate,
+  longDate,
+  minutesOf,
+  workoutTitle,
+  workoutWhy,
+} from '@/features/workout/workoutText'
+import { WorkoutRow } from '@/features/plan/WorkoutRow'
+import { formatDistance } from '@/domain/units/units'
 
 export default function TodayPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const profile = useLiveQuery(getProfile)
+  const profile = useLiveQuery(async () => (await getProfile()) ?? null)
+  const plan = useLiveQuery(async () => (await getActivePlan()) ?? null)
+  const today = todayIso()
 
-  return (
-    <Page>
-      <PageHeader title={t('today.title')} />
-      {profile?.onboardingCompletedAt ? (
-        <Card>
-          <CardText>{t('today.placeholder')}</CardText>
-        </Card>
-      ) : (
+  // Сегодняшние и ближайшие будущие тренировки одним запросом.
+  const upcoming = useLiveQuery(
+    () =>
+      plan
+        ? db.workouts
+            .where('date')
+            .aboveOrEqual(today)
+            .filter((w) => w.planId === plan.id && w.deletedAt === null)
+            .limit(12)
+            .sortBy('date')
+        : Promise.resolve([] as Workout[]),
+    [plan?.id, today],
+  )
+
+  if (profile === undefined || plan === undefined) return <Page>{t('common.loading')}</Page>
+
+  if (!profile?.onboardingCompletedAt || !plan) {
+    return (
+      <Page>
+        <PageHeader title={t('today.title')} />
         <Card>
           <CardTitle>{t('today.noPlan')}</CardTitle>
           <CardText className="mt-2 mb-4">{t('today.noPlanHint')}</CardText>
@@ -24,7 +52,115 @@ export default function TodayPage() {
             {t('today.startOnboarding')}
           </Button>
         </Card>
+      </Page>
+    )
+  }
+
+  const todays = (upcoming ?? []).filter((w) => w.date === today)
+  const pending = todays.filter((w) => w.status === 'planned')
+  // Главная карточка — беговая тренировка, ОФП показываем второй.
+  const main = pending.find((w) => w.type !== 'strength') ?? pending[0] ?? null
+  const others = todays.filter((w) => w.id !== main?.id)
+  const nextFuture = (upcoming ?? []).find((w) => w.date > today && w.status === 'planned') ?? null
+  const week = plan.weeks.find((w) => today >= w.startDate && today < shift(w.startDate, 7))
+  const planNotStarted = today < plan.startDate
+
+  return (
+    <Page className="space-y-4">
+      <PageHeader
+        title={t('today.title')}
+        subtitle={
+          week ? t('today.week', { n: week.index + 1, total: plan.weeks.length }) : undefined
+        }
+        action={
+          week?.isRecovery ? (
+            <Badge tone="success">{t('today.recoveryWeek')}</Badge>
+          ) : week?.isTaper ? (
+            <Badge tone="warning">{t('today.taperWeek')}</Badge>
+          ) : undefined
+        }
+      />
+
+      {planNotStarted && (
+        <Card>
+          <CardTitle>{t('today.planStarts', { date: longDate(plan.startDate) })}</CardTitle>
+          <CardText className="mt-2">{t('today.planStartsHint')}</CardText>
+        </Card>
       )}
+
+      {!planNotStarted && main && <MainWorkoutCard workout={main} />}
+
+      {!planNotStarted && !main && (
+        <Card>
+          <CardTitle>{todays.length ? t('today.done') : t('today.rest')}</CardTitle>
+          <CardText className="mt-2">
+            {todays.length ? t('today.doneHint') : t('today.restHint')}
+          </CardText>
+        </Card>
+      )}
+
+      {others.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-muted text-sm font-medium">{t('today.alsoToday')}</h2>
+          {others.map((w) => (
+            <WorkoutRow key={w.id} workout={w} showDate={false} />
+          ))}
+        </section>
+      )}
+
+      {nextFuture && (!main || planNotStarted) && (
+        <section className="space-y-2">
+          <h2 className="text-muted text-sm font-medium">{t('today.nextWorkout')}</h2>
+          <WorkoutRow workout={nextFuture} />
+        </section>
+      )}
+
+      <Link to="/log/new" className="text-accent block text-center text-sm font-medium">
+        {t('workout.logManual')}
+      </Link>
     </Page>
   )
+}
+
+function MainWorkoutCard({ workout }: { workout: Workout }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  return (
+    <Card className="space-y-4">
+      <div>
+        <p className="text-muted text-sm">{humanDate(workout.date, t)}</p>
+        <CardTitle className="text-2xl">{workoutTitle(workout, t)}</CardTitle>
+        <p className="text-muted mt-1">
+          {t('workout.estimated', { minutes: minutesOf(workout.estimatedSeconds) })}
+          {workout.targetDistanceM
+            ? ` · ${t('workout.target', { distance: formatDistance(workout.targetDistanceM, 'metric') })}`
+            : ''}
+        </p>
+      </div>
+      <CardText>{workoutWhy(workout.type, t)}</CardText>
+      <div className="flex flex-col gap-2">
+        <Button size="lg" fullWidth onClick={() => navigate(`/workout/${workout.id}/timer`)}>
+          <Play className="size-5" aria-hidden /> {t('workout.start')}
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => navigate(`/log/new?workoutId=${workout.id}`)}
+          >
+            <PenLine className="size-4" aria-hidden /> {t('workout.logManual')}
+          </Button>
+          <Button variant="ghost" onClick={() => navigate(`/workout/${workout.id}`)}>
+            {t('workout.segments')}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function shift(iso: string, days: number): string {
+  const d = new Date(iso)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
 }

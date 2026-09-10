@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 
 interface Props {
   title: string
-  subtitle?: string
-  action?: ReactNode
+  subtitle?: string | undefined
+  action?: ReactNode | undefined
 }
 
 export function PageHeader({ title, subtitle, action }: Props) {

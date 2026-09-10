@@ -1,17 +1,22 @@
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Button, Card, CardText, CardTitle, Page, PageHeader, Segmented } from '@/ui'
+import { ChevronRight } from 'lucide-react'
+import { Button, Card, CardText, CardTitle, Page, PageHeader, Segmented, Toggle } from '@/ui'
 import { useUiStore, type ThemeMode } from '@/store/uiStore'
 import { getSettings, updateSettings } from '@/data/repositories/settingsRepo'
+import { deleteActivePlan, getActivePlan } from '@/data/repositories/planRepo'
 import { wipeDatabase } from '@/data/db'
 import { APP_VERSION } from '@/config/app'
 import type { UnitSystem } from '@/domain/units/units'
 
 export default function MorePage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const theme = useUiStore((s) => s.theme)
   const setTheme = useUiStore((s) => s.setTheme)
   const settings = useLiveQuery(getSettings)
+  const plan = useLiveQuery(async () => (await getActivePlan()) ?? null)
 
   const onWipe = async () => {
     if (window.confirm(t('more.deleteAllConfirm'))) {
@@ -19,10 +24,24 @@ export default function MorePage() {
       window.location.assign('/')
     }
   }
+  const onRebuild = async () => {
+    if (window.confirm(t('more.rebuildPlanConfirm'))) {
+      await deleteActivePlan()
+      navigate('/onboarding')
+    }
+  }
 
   return (
     <Page className="space-y-4">
       <PageHeader title={t('more.title')} subtitle={t('app.version', { version: APP_VERSION })} />
+
+      <Link
+        to="/history"
+        className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+      >
+        {t('more.history')}
+        <ChevronRight className="text-muted size-5" aria-hidden />
+      </Link>
 
       <Card className="space-y-3">
         <CardTitle>{t('more.settings')}</CardTitle>
@@ -51,7 +70,26 @@ export default function MorePage() {
             ]}
           />
         </div>
+        <Toggle
+          label={t('more.voice')}
+          checked={settings?.voiceEnabled ?? true}
+          onChange={(voiceEnabled) => void updateSettings({ voiceEnabled })}
+        />
+        <Toggle
+          label={t('more.vibration')}
+          checked={settings?.vibrationEnabled ?? true}
+          onChange={(vibrationEnabled) => void updateSettings({ vibrationEnabled })}
+        />
       </Card>
+
+      {plan && (
+        <Card className="space-y-3">
+          <CardTitle>{t('more.plan')}</CardTitle>
+          <Button variant="outline" fullWidth onClick={() => void onRebuild()}>
+            {t('more.rebuildPlan')}
+          </Button>
+        </Card>
+      )}
 
       <Card className="space-y-2">
         <CardTitle>{t('disclaimer.title')}</CardTitle>
