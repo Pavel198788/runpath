@@ -17,6 +17,11 @@ import {
 } from '@/features/workout/workoutText'
 import { WorkoutRow } from '@/features/plan/WorkoutRow'
 import { formatDistance } from '@/domain/units/units'
+import { AdaptationCard } from './AdaptationCard'
+import { Toggle } from '@/ui'
+import { getWellness, upsertWellness } from '@/data/repositories/wellnessRepo'
+import { allWorkoutLogs } from '@/data/repositories/workoutLogRepo'
+import { acwr } from '@/domain/load/load'
 
 export default function TodayPage() {
   const { t } = useTranslation()
@@ -24,6 +29,14 @@ export default function TodayPage() {
   const profile = useLiveQuery(async () => (await getProfile()) ?? null)
   const plan = useLiveQuery(async () => (await getActivePlan()) ?? null)
   const today = todayIso()
+  const wellness = useLiveQuery(async () => (await getWellness(today)) ?? null, [today])
+  const load = useLiveQuery(async () => {
+    const logs = await allWorkoutLogs()
+    return acwr(
+      logs.map((l) => ({ date: l.date, durationSec: l.durationSec, rpe: l.rpe, type: l.type })),
+      today,
+    )
+  }, [today])
 
   // Сегодняшние и ближайшие будущие тренировки одним запросом.
   const upcoming = useLiveQuery(
@@ -81,6 +94,20 @@ export default function TodayPage() {
         }
       />
 
+      <AdaptationCard plan={plan} />
+
+      {load?.zone === 'risk' && (
+        <Card className="border-warning">
+          <CardText className="text-warning">{t('load.riskToday', { ratio: load.ratio })}</CardText>
+        </Card>
+      )}
+
+      {wellness?.sick && (
+        <Card>
+          <CardText>{t('wellness.sickOn')}</CardText>
+        </Card>
+      )}
+
       {planNotStarted && (
         <Card>
           <CardTitle>{t('today.planStarts', { date: longDate(plan.startDate) })}</CardTitle>
@@ -88,7 +115,7 @@ export default function TodayPage() {
         </Card>
       )}
 
-      {!planNotStarted && main && <MainWorkoutCard workout={main} />}
+      {!planNotStarted && main && !wellness?.sick && <MainWorkoutCard workout={main} />}
 
       {!planNotStarted && !main && (
         <Card>
@@ -115,9 +142,23 @@ export default function TodayPage() {
         </section>
       )}
 
-      <Link to="/log/new" className="text-accent block text-center text-sm font-medium">
-        {t('workout.logManual')}
-      </Link>
+      <div className="flex flex-col items-center gap-2">
+        <Link to="/run" className="text-accent text-sm font-medium">
+          {t('today.freeRun')}
+        </Link>
+        <Link to="/log/new" className="text-accent text-sm font-medium">
+          {t('workout.logManual')}
+        </Link>
+      </div>
+
+      <Card>
+        <Toggle
+          label={t('wellness.sickToday')}
+          description={t('wellness.sickHint')}
+          checked={wellness?.sick ?? false}
+          onChange={(sick) => void upsertWellness(today, { sick })}
+        />
+      </Card>
     </Page>
   )
 }

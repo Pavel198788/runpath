@@ -1,5 +1,14 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Plan, Settings, UserProfile, Workout, WorkoutLog } from './entities'
+import type {
+  Plan,
+  PlanAdjustment,
+  Settings,
+  Track,
+  UserProfile,
+  WellnessEntry,
+  Workout,
+  WorkoutLog,
+} from './entities'
 
 /**
  * Локальная база (IndexedDB через Dexie). Единственный источник истины.
@@ -17,6 +26,9 @@ export class RunPathDB extends Dexie {
   plans!: EntityTable<Plan, 'id'>
   workouts!: EntityTable<Workout, 'id'>
   workoutLogs!: EntityTable<WorkoutLog, 'id'>
+  tracks!: EntityTable<Track, 'id'>
+  wellness!: EntityTable<WellnessEntry, 'id'>
+  planAdjustments!: EntityTable<PlanAdjustment, 'id'>
 
   constructor(name = 'runpath') {
     super(name)
@@ -34,6 +46,48 @@ export class RunPathDB extends Dexie {
       workouts: 'id, planId, date, weekIndex, updatedAt, deletedAt',
       workoutLogs: 'id, workoutId, date, updatedAt, deletedAt',
     })
+
+    // v3 (A2): GPS-треки, самочувствие, корректировки плана; новые поля у записей и плана.
+    this.version(3)
+      .stores({
+        profiles: 'id, updatedAt, deletedAt',
+        settings: 'id, updatedAt, deletedAt',
+        plans: 'id, isActive, updatedAt, deletedAt',
+        workouts: 'id, planId, date, weekIndex, updatedAt, deletedAt',
+        workoutLogs: 'id, workoutId, date, externalId, updatedAt, deletedAt',
+        tracks: 'id, logId, updatedAt, deletedAt',
+        wellness: 'id, date, updatedAt, deletedAt',
+        planAdjustments: 'id, planId, status, updatedAt, deletedAt',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('workoutLogs')
+          .toCollection()
+          .modify((log: Partial<WorkoutLog>) => {
+            log.startTime ??= null
+            log.avgHr ??= null
+            log.elevationGainM ??= null
+            log.splits ??= []
+            log.trackId ??= null
+            log.externalId ??= null
+            log.name ??= null
+          })
+        await tx
+          .table('plans')
+          .toCollection()
+          .modify((plan: Partial<Plan>) => {
+            plan.lastEvaluatedWeekIndex ??= -1
+          })
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((s: Partial<Settings>) => {
+            s.gpsEnabled ??= true
+            s.autoPause ??= true
+            s.remindersEnabled ??= false
+            s.reminderTime ??= '18:00'
+          })
+      })
   }
 }
 

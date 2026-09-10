@@ -3,8 +3,28 @@ import type { WorkoutLog } from '../entities'
 import type { NewEntity } from '../entities/base'
 import { touch, withMeta } from './helpers'
 
-export async function addWorkoutLog(data: NewEntity<WorkoutLog>): Promise<WorkoutLog> {
-  const log = withMeta<WorkoutLog>(data)
+type LogInput = Omit<
+  NewEntity<WorkoutLog>,
+  'startTime' | 'avgHr' | 'elevationGainM' | 'splits' | 'trackId' | 'externalId' | 'name'
+> &
+  Partial<
+    Pick<
+      WorkoutLog,
+      'startTime' | 'avgHr' | 'elevationGainM' | 'splits' | 'trackId' | 'externalId' | 'name'
+    >
+  >
+
+export async function addWorkoutLog(data: LogInput): Promise<WorkoutLog> {
+  const log = withMeta<WorkoutLog>({
+    startTime: null,
+    avgHr: null,
+    elevationGainM: null,
+    splits: [],
+    trackId: null,
+    externalId: null,
+    name: null,
+    ...data,
+  })
   await db.transaction('rw', db.workoutLogs, db.workouts, async () => {
     await db.workoutLogs.put(log)
     if (log.workoutId) {
@@ -40,8 +60,12 @@ export async function logsBetween(from: string, to: string): Promise<WorkoutLog[
 export async function deleteWorkoutLog(id: string): Promise<void> {
   const log = await db.workoutLogs.get(id)
   if (!log) return
-  await db.transaction('rw', db.workoutLogs, db.workouts, async () => {
+  await db.transaction('rw', db.workoutLogs, db.workouts, db.tracks, async () => {
     await db.workoutLogs.put(touch(log, { deletedAt: new Date().toISOString() }))
+    if (log.trackId) {
+      const track = await db.tracks.get(log.trackId)
+      if (track) await db.tracks.put(touch(track, { deletedAt: new Date().toISOString() }))
+    }
     if (log.workoutId) {
       const w = await db.workouts.get(log.workoutId)
       if (w) await db.workouts.put(touch(w, { status: 'planned' }))

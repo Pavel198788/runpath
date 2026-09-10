@@ -1,6 +1,7 @@
 import type { BaseEntity } from './base'
 import type { WorkoutType } from '@/domain/plan/types'
 import type { IntegrationSource } from '@/integrations/types'
+import type { Split } from '@/domain/geo/geo'
 
 export type Feeling = 'great' | 'ok' | 'hard' | 'bad'
 
@@ -23,4 +24,14 @@ export interface WorkoutLog extends BaseEntity {
   note: string
   /** Сколько сегментов таймера пройдено (для «частично»). */
   completedSegments: number | null
+  /** Момент старта (ISO с временем), если известен. */
+  startTime: string | null
+  avgHr: number | null
+  elevationGainM: number | null
+  splits: Split[]
+  /** Ссылка на GPS-трек (таблица tracks). */
+  trackId: string | null
+  /** Идентификатор в источнике импорта — защита от дублей. */
+  externalId: string | null
+  name: string | null
 }

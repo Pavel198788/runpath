@@ -22,6 +22,12 @@ import { todayIso } from '@/domain/dates/dates'
 import { cn } from '@/lib/cn'
 import { workoutTitle } from './workoutText'
 import type { TimerResult } from './TimerPage'
+import { usePendingTrack } from '@/features/tracking/pendingTrackStore'
+import { saveTrack } from '@/data/repositories/trackRepo'
+import { db } from '@/data/db'
+import { touch } from '@/data/repositories/helpers'
+import { elevationGainM, splitsByKm } from '@/domain/geo/geo'
+import { formatDistance } from '@/domain/units/units'
 
 const TYPES: WorkoutType[] = [
   'walk',
@@ -55,16 +61,26 @@ export default function LogWorkoutPage() {
   const timerResult = (location.state as TimerResult | null) ?? null
   const workoutId = timerResult?.workoutId ?? params.get('workoutId')
   const workout = useLiveQuery(
-    () => (workoutId ? getWorkout(workoutId) : Promise.resolve(undefined)),
+    async () => (workoutId ? ((await getWorkout(workoutId)) ?? null) : null),
     [workoutId],
   )
+  const pending = usePendingTrack((s) => s.pending)
+  const setPending = usePendingTrack((s) => s.setPending)
 
   const [date, setDate] = useState(todayIso())
   const [type, setType] = useState<WorkoutType | null>(null)
   const [minutes, setMinutes] = useState(
-    timerResult ? String(Math.max(1, Math.round(timerResult.durationSec / 60))) : '',
+    timerResult
+      ? String(Math.max(1, Math.round(timerResult.durationSec / 60)))
+      : pending
+        ? String(Math.max(1, Math.round(pending.movingSec / 60)))
+        : '',
   )
-  const [distance, setDistance] = useState('')
+  const [distance, setDistance] = useState(
+    pending && pending.distanceM > 50
+      ? (pending.distanceM / 1000).toFixed(2).replace('.', ',')
+      : '',
+  )
   const [rpe, setRpe] = useState<number | null>(null)
   const [feeling, setFeeling] = useState<Feeling | null>(null)
   const [pains, setPains] = useState<PainArea[]>([])
@@ -91,7 +107,17 @@ export default function LogWorkoutPage() {
       pains,
       note: note.trim(),
       completedSegments: timerResult?.completedSegments ?? null,
+      startTime:
+        pending?.startTime ??
+        (timerResult ? new Date(Date.now() - timerResult.durationSec * 1000).toISOString() : null),
+      elevationGainM: pending ? elevationGainM(pending.points) : null,
+      splits: pending ? splitsByKm(pending.points) : [],
     })
+    if (pending && pending.points.length > 1) {
+      const track = await saveTrack(log.id, pending.points)
+      await db.workoutLogs.put(touch(log, { trackId: track.id }))
+      setPending(null)
+    }
     navigate(`/history/${log.id}`, { replace: true })
   }
 
@@ -107,6 +133,11 @@ export default function LogWorkoutPage() {
               total: timerResult.totalSegments,
             })}
           </CardText>
+          {pending && pending.distanceM > 50 && (
+            <CardText className="text-success">
+              {t('log.gpsSaved', { distance: formatDistance(pending.distanceM, 'metric') })}
+            </CardText>
+          )}
         </Card>
       )}
 

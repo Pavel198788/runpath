@@ -8,6 +8,8 @@ import { addDaysIso, mondayOf, toIsoDate, todayIso } from '@/domain/dates/dates'
 import { formatDistance, formatDuration } from '@/domain/units/units'
 import type { Phase } from '@/domain/plan/types'
 import { shortDate } from '@/features/workout/workoutText'
+import { acwr, dailyLoads, monotony } from '@/domain/load/load'
+import { Badge } from '@/ui'
 
 const LEVEL_BY_PHASE: Record<Phase, string> = {
   walk: 'walker',
@@ -41,6 +43,23 @@ export default function ProgressPage() {
   })
   const maxMinutes = Math.max(30, ...weekly.map((w) => w.minutes))
 
+  const entries = logs.map((l) => ({
+    date: l.date,
+    durationSec: l.durationSec,
+    rpe: l.rpe,
+    type: l.type,
+  }))
+  const load = acwr(entries, today)
+  const mono = monotony(dailyLoads(entries, addDaysIso(today, -6), today))
+  const zoneTone =
+    load.zone === 'safe'
+      ? 'success'
+      : load.zone === 'caution'
+        ? 'warning'
+        : load.zone === 'risk'
+          ? 'danger'
+          : 'neutral'
+
   const currentWeek = plan?.weeks.find(
     (w) => today >= w.startDate && today < addDaysIso(w.startDate, 7),
   )
@@ -71,6 +90,28 @@ export default function ProgressPage() {
         <Stat label={t('progress.totalDistance')} value={formatDistance(totalDistance, 'metric')} />
         <Stat label={t('progress.totalTime')} value={formatDuration(totalTime)} />
       </div>
+
+      <Card className="space-y-2">
+        <div className="flex items-center justify-between">
+          <CardTitle>{t('load.title')}</CardTitle>
+          <Badge tone={zoneTone}>{t(`load.zone.${load.zone}`)}</Badge>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Stat
+            label={t('load.acwr')}
+            value={load.ratio !== null ? String(load.ratio).replace('.', ',') : '—'}
+          />
+          <Stat label={t('load.acute')} value={String(Math.round(load.acute))} />
+          <Stat label={t('load.chronic')} value={String(Math.round(load.chronic))} />
+        </div>
+        <p className="text-muted text-sm">{t(`load.zoneHint.${load.zone}`)}</p>
+        <p className="text-muted text-xs">{t('load.acwrHint')}</p>
+        {mono !== null && Number.isFinite(mono) && mono > 2 && (
+          <p className="text-warning text-sm">
+            {t('load.monotony')} {String(mono).replace('.', ',')} — {t('load.monotonyHint')}
+          </p>
+        )}
+      </Card>
 
       <Card>
         <CardTitle>{t('progress.weekly')}</CardTitle>

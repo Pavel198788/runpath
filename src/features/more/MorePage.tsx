@@ -2,7 +2,19 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronRight } from 'lucide-react'
-import { Button, Card, CardText, CardTitle, Page, PageHeader, Segmented, Toggle } from '@/ui'
+import {
+  Button,
+  Card,
+  CardText,
+  CardTitle,
+  Field,
+  Input,
+  Page,
+  PageHeader,
+  Segmented,
+  Toggle,
+} from '@/ui'
+import { requestNotificationPermission } from '@/app/useLocalReminders'
 import { useUiStore, type ThemeMode } from '@/store/uiStore'
 import { getSettings, updateSettings } from '@/data/repositories/settingsRepo'
 import { deleteActivePlan, getActivePlan } from '@/data/repositories/planRepo'
@@ -40,6 +52,13 @@ export default function MorePage() {
         className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
       >
         {t('more.history')}
+        <ChevronRight className="text-muted size-5" aria-hidden />
+      </Link>
+      <Link
+        to="/import"
+        className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+      >
+        {t('more.import')}
         <ChevronRight className="text-muted size-5" aria-hidden />
       </Link>
 
@@ -80,6 +99,48 @@ export default function MorePage() {
           checked={settings?.vibrationEnabled ?? true}
           onChange={(vibrationEnabled) => void updateSettings({ vibrationEnabled })}
         />
+      </Card>
+
+      <Card className="space-y-2">
+        <CardTitle>{t('more.gps')}</CardTitle>
+        <Toggle
+          label={t('gps.enable')}
+          description={t('gps.enableHint')}
+          checked={settings?.gpsEnabled ?? true}
+          onChange={(gpsEnabled) => void updateSettings({ gpsEnabled })}
+        />
+        <Toggle
+          label={t('gps.autoPause')}
+          checked={settings?.autoPause ?? true}
+          onChange={(autoPause) => void updateSettings({ autoPause })}
+        />
+      </Card>
+
+      <Card className="space-y-3">
+        <CardTitle>{t('reminders.title')}</CardTitle>
+        <Toggle
+          label={t('reminders.enable')}
+          description={t('reminders.hint')}
+          checked={settings?.remindersEnabled ?? false}
+          onChange={(remindersEnabled) => {
+            void (async () => {
+              if (remindersEnabled && !(await requestNotificationPermission())) {
+                window.alert(t('reminders.permissionDenied'))
+                return
+              }
+              await updateSettings({ remindersEnabled })
+            })()
+          }}
+        />
+        {settings?.remindersEnabled && (
+          <Field label={t('reminders.time')}>
+            <Input
+              type="time"
+              value={settings.reminderTime}
+              onChange={(e) => void updateSettings({ reminderTime: e.target.value })}
+            />
+          </Field>
+        )}
       </Card>
 
       {plan && (

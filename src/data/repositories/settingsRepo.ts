@@ -9,12 +9,17 @@ const defaults: NewEntity<Settings> = {
   voiceEnabled: true,
   vibrationEnabled: true,
   telemetryConsent: false,
+  gpsEnabled: true,
+  autoPause: true,
+  remindersEnabled: false,
+  reminderTime: '18:00',
 }
 
 /** Настройки всегда существуют: если записи нет — создаём с дефолтами. */
 export async function getSettings(): Promise<Settings> {
   const existing = await db.settings.get(SETTINGS_ID)
-  if (existing) return existing
+  // Новые поля у старых записей заполняем дефолтами (на случай, если миграция их не тронула).
+  if (existing) return { ...defaults, ...existing }
   const created = withMeta<Settings>(defaults, SETTINGS_ID)
   await db.settings.put(created)
   return created

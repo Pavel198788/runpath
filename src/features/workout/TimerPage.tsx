@@ -24,6 +24,9 @@ import { createSilentAudio, useWakeLock } from './useWakeLock'
 import { useNow } from './useNow'
 import { sayKeyFor, segmentLabel, workoutTitle } from './workoutText'
 import type { Segment } from '@/domain/plan/types'
+import { useGpsTracker } from '@/features/tracking/useGpsTracker'
+import { GpsPanel } from '@/features/tracking/GpsPanel'
+import { usePendingTrack } from '@/features/tracking/pendingTrackStore'
 
 export interface TimerResult {
   workoutId: string
@@ -60,6 +63,10 @@ export default function TimerPage() {
   const running = timer !== null && !timer.finished
   const now = useNow(250, running)
   useWakeLock(running)
+  const gpsWanted = (settings?.gpsEnabled ?? true) && workout?.type !== 'strength'
+  const gps = useGpsTracker({ autoPause: settings?.autoPause ?? true })
+  const setPending = usePendingTrack((s) => s.setPending)
+  const startedAtRef = useRef<string | null>(null)
 
   const announceSegment = useCallback(
     (seg: Segment) => {
@@ -79,6 +86,8 @@ export default function TimerPage() {
     // Тихая дорожка запускается из жеста пользователя — иначе iOS её заблокирует.
     audioRef.current = createSilentAudio()
     void audioRef.current?.play().catch(() => {})
+    startedAtRef.current = new Date().toISOString()
+    if (gpsWanted) gps.start()
     const first = workout.segments[0]
     if (first) announceSegment(first)
   }
@@ -145,6 +154,19 @@ export default function TimerPage() {
     }
     cancel()
     audioRef.current?.pause()
+    if (gpsWanted) {
+      const points = gps.stop()
+      setPending(
+        points.length > 1
+          ? {
+              points,
+              distanceM: gps.state.distanceM,
+              movingSec: gps.state.movingSec,
+              startTime: startedAtRef.current ?? new Date().toISOString(),
+            }
+          : null,
+      )
+    }
     navigate('/log/new', { replace: true, state: result })
   }
 
@@ -245,6 +267,11 @@ export default function TimerPage() {
               </p>
             )}
             {snap.paused && <p className="text-warning mt-4 font-medium">{t('say.paused')}</p>}
+            {gpsWanted && (
+              <div className="mt-4 w-full max-w-sm">
+                <GpsPanel gps={gps.state} />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -269,9 +296,11 @@ export default function TimerPage() {
               const nowMs = Date.now()
               if (snap.paused) {
                 update(resume(timer, nowMs))
+                if (gpsWanted) gps.resume()
                 speak(t('say.resumed'))
               } else {
                 update(pause(timer, nowMs))
+                if (gpsWanted) gps.pause()
                 speak(t('say.paused'))
               }
             }}

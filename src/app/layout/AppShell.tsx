@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { BottomNav } from './BottomNav'
 import { OfflineBanner } from './OfflineBanner'
 import { UpdatePrompt } from './UpdatePrompt'
+import { useLocalReminders } from '@/app/useLocalReminders'
 
 export function AppShell() {
   const { t } = useTranslation()
+  useLocalReminders()
   return (
     <div className="min-h-dvh">
       <OfflineBanner />

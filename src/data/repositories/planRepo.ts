@@ -10,7 +10,7 @@ export async function getActivePlan(): Promise<Plan | undefined> {
 /** Сохраняет сгенерированный план и его тренировки одной транзакцией; старый план деактивируется. */
 export async function saveGeneratedPlan(generated: GeneratedPlan): Promise<Plan> {
   const { id, ...core } = generated.plan
-  const plan = withMeta<Plan>({ ...core, isActive: true }, id)
+  const plan = withMeta<Plan>({ ...core, isActive: true, lastEvaluatedWeekIndex: -1 }, id)
   const workouts = generated.workouts.map(({ id: wid, ...w }) =>
     withMeta<Workout>({ ...w, movedFrom: null }, wid),
   )

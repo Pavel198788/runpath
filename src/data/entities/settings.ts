@@ -9,6 +9,13 @@ export interface Settings extends BaseEntity {
   vibrationEnabled: boolean
   /** Явное согласие на отправку ошибок (этап B), по умолчанию выключено. */
   telemetryConsent: boolean
+  /** GPS во время тренировки с таймером. */
+  gpsEnabled: boolean
+  autoPause: boolean
+  /** Локальные напоминания (работают только при открытом приложении — см. docs). */
+  remindersEnabled: boolean
+  /** «HH:MM». */
+  reminderTime: string
 }
 
 export const SETTINGS_ID = 'settings'

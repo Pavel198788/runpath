@@ -14,6 +14,8 @@ const TimerPage = lazy(() => import('@/features/workout/TimerPage'))
 const LogWorkoutPage = lazy(() => import('@/features/workout/LogWorkoutPage'))
 const HistoryPage = lazy(() => import('@/features/history/HistoryPage'))
 const LogDetailPage = lazy(() => import('@/features/history/LogDetailPage'))
+const ImportPage = lazy(() => import('@/features/import/ImportPage'))
+const FreeRunPage = lazy(() => import('@/features/tracking/FreeRunPage'))
 
 export const router = createBrowserRouter([
   {
@@ -29,9 +31,11 @@ export const router = createBrowserRouter([
       { path: '/log/new', element: <LogWorkoutPage /> },
       { path: '/history', element: <HistoryPage /> },
       { path: '/history/:id', element: <LogDetailPage /> },
+      { path: '/import', element: <ImportPage /> },
       { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },
   // Таймер — без нижней навигации, на весь экран.
   { path: '/workout/:id/timer', element: <TimerPage /> },
+  { path: '/run', element: <FreeRunPage /> },
 ])
