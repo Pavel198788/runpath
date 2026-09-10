@@ -42,15 +42,11 @@ test('онбординг и все экраны открываются', async (
   await expect(page.getByRole('heading', { name: 'Ещё' })).toBeVisible()
 
   // Таймер тренировки: открываем первую тренировку из плана.
-  await page.getByRole('link', { name: 'План' }).click()
+  await page.goto('/plan')
   const workoutLink = page.locator('a[href*="/workout/"]').first()
-  if ((await workoutLink.count()) === 0) {
-    await page
-      .getByRole('button', { name: /Неделя 1/ })
-      .first()
-      .click()
-  }
-  await workoutLink.click()
+  // Список приходит из базы, поэтому дожидаемся его и переходим по адресу ссылки.
+  await expect(workoutLink).toBeVisible()
+  await page.goto((await workoutLink.getAttribute('href')) ?? '/plan')
   await page.getByRole('button', { name: /Начать с таймером/ }).click()
   await expect(page.getByText('Приготовься')).toBeVisible()
 
