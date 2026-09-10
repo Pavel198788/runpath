@@ -18,12 +18,23 @@ Local-first приложение на русском, ведёт новичка 
 ## Команды
 
 ```
-npm run dev          # dev-сервер
+npm run dev          # dev-сервер клиента
 npm run check        # typecheck + lint + test + build — прогонять перед коммитом
 npm run test:watch   # тесты в watch-режиме
 npm run icons        # перегенерировать иконки PWA
 npm run format       # prettier
+npm run e2e          # Playwright: офлайн-режим и онбординг (нужен собранный dist)
+
+# сервер (из папки server/)
+composer install
+vendor/bin/phpunit                      # тесты API
+vendor/bin/phinx migrate -e production  # миграции базы
 ```
+
+## Сборка с сервером и без
+
+Без переменных окружения приложение автономно: аккаунтов нет, всё на устройстве.
+С сервером: `VITE_API_URL=https://домен/api/public VITE_FEATURE_SERVER=true npm run build`.
 
 ## Структура
 
@@ -41,7 +52,8 @@ src/integrations/ провайдеры импорта (файлы — A2, Strava
 src/config/     features.ts (флаги), app.ts (константы)
 content/        обучающие материалы, рецепты, продукты, упражнения (JSON/MD, валидируются zod)
 docs/           ROADMAP, FEATURES, IDEAS, PHYSIOLOGY, adr/
-server/         PHP-бэкенд — ТОЛЬКО на этапе B, сейчас не существует
+server/         PHP-бэкенд (Slim 4): public/ (точка входа и админка), src/ (контроллеры, сервисы),
+                migrations/ (Phinx), cron/ (фоновые задания), tests/ (PHPUnit). Установка — server/README.md
 ```
 
 ## Соглашения
@@ -62,7 +74,8 @@ server/         PHP-бэкенд — ТОЛЬКО на этапе B, сейча�
 - Не менять правила безопасности плана (`docs/PHYSIOLOGY.md`) без обновления тестов в `src/domain/`.
 - Не импортировать React/БД/UI из `src/domain/` (ESLint это проверяет).
 - Никаких секретов в репозитории: ключи — только в `.env` (клиентские `VITE_*` — только флаги, не секреты).
-- Ни строчки серверного кода, пока этап A не принят.
+- Не делать сервер обязательным: без `VITE_API_URL` приложение собирается полностью автономным, и так и должно оставаться.
+- В `composer.json` зафиксирована платформа PHP 8.2 (`config.platform.php`) — как на shared-хостинге. Не убирать, иначе пакеты подтянутся под более новый PHP и не встанут на хостинге.
 - Не выдавать за работающее то, что PWA не может (фоновый GPS на iOS при заблокированном экране, push без сервера) — честно описывать ограничение.
 
 ## Процесс
