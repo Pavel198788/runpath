@@ -13,6 +13,10 @@ const defaults: NewEntity<Settings> = {
   autoPause: true,
   remindersEnabled: false,
   reminderTime: '18:00',
+  aiProvider: null,
+  aiApiKey: null,
+  aiBaseUrl: '',
+  aiModel: '',
 }
 
 /** Настройки всегда существуют: если записи нет — создаём с дефолтами. */

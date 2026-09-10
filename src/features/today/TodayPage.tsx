@@ -19,6 +19,8 @@ import { WorkoutRow } from '@/features/plan/WorkoutRow'
 import { formatDistance } from '@/domain/units/units'
 import { AdaptationCard } from './AdaptationCard'
 import { CheckinCard } from './CheckinCard'
+import { useEffect } from 'react'
+import { closePastWorkouts } from '@/data/services/planMaintenance'
 import { lessonOfWeek } from '@/features/learn/lessonOfWeek'
 import { Toggle } from '@/ui'
 import { getWellness, upsertWellness } from '@/data/repositories/wellnessRepo'
@@ -53,6 +55,11 @@ export default function TodayPage() {
         : Promise.resolve([] as Workout[]),
     [plan?.id, today],
   )
+
+  // Прошедшие невыполненные тренировки закрываем при открытии экрана.
+  useEffect(() => {
+    if (plan) void closePastWorkouts(plan.id)
+  }, [plan?.id, today]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (profile === undefined || plan === undefined) return <Page>{t('common.loading')}</Page>
 
@@ -161,7 +168,19 @@ export default function TodayPage() {
         </Link>
       )}
 
+      {week && week.index === 0 && (
+        <Link
+          to="/leveltest"
+          className="bg-surface block rounded-xl border border-border px-4 py-3 text-sm font-medium"
+        >
+          {t('today.levelTest')}
+        </Link>
+      )}
+
       <div className="flex flex-col items-center gap-2">
+        <Link to="/coach" className="text-accent text-sm font-medium">
+          {t('today.coachLink')}
+        </Link>
         <Link to="/run" className="text-accent text-sm font-medium">
           {t('today.freeRun')}
         </Link>

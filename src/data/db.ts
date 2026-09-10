@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
   Achievement,
+  AiConversation,
   Challenge,
   NutritionDay,
   Shoe,
@@ -37,6 +38,7 @@ export class RunPathDB extends Dexie {
   shoes!: EntityTable<Shoe, 'id'>
   achievements!: EntityTable<Achievement, 'id'>
   challenges!: EntityTable<Challenge, 'id'>
+  aiConversations!: EntityTable<AiConversation, 'id'>
 
   constructor(name = 'runpath') {
     super(name)
@@ -141,6 +143,35 @@ export class RunPathDB extends Dexie {
           .toCollection()
           .modify((l: Partial<WorkoutLog>) => {
             l.shoeId ??= null
+          })
+      })
+
+    // v6 (A5): диалоги с ИИ-тренером; настройки BYOK.
+    this.version(6)
+      .stores({
+        profiles: 'id, updatedAt, deletedAt',
+        settings: 'id, updatedAt, deletedAt',
+        plans: 'id, isActive, updatedAt, deletedAt',
+        workouts: 'id, planId, date, weekIndex, updatedAt, deletedAt',
+        workoutLogs: 'id, workoutId, date, externalId, shoeId, updatedAt, deletedAt',
+        tracks: 'id, logId, updatedAt, deletedAt',
+        wellness: 'id, date, updatedAt, deletedAt',
+        planAdjustments: 'id, planId, status, updatedAt, deletedAt',
+        nutritionDays: 'id, date, updatedAt, deletedAt',
+        shoes: 'id, updatedAt, deletedAt',
+        achievements: 'id, key, updatedAt, deletedAt',
+        challenges: 'id, status, updatedAt, deletedAt',
+        aiConversations: 'id, updatedAt, deletedAt',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((s: Partial<Settings>) => {
+            s.aiProvider ??= null
+            s.aiApiKey ??= null
+            s.aiBaseUrl ??= ''
+            s.aiModel ??= ''
           })
       })
   }

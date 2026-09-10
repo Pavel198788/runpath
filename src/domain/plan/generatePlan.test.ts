@@ -163,10 +163,14 @@ describe('generatePlan — правила безопасности', () => {
     expect(baseCareful).toBe(baseNormal + 7)
   })
 
-  it('слишком ранняя дата старта даёт предупреждение', () => {
+  it('слишком ранняя дата старта даёт предупреждение, поздняя — растягивает план', () => {
     const { plan } = gen({ targetDate: '2027-01-01' })
     expect(plan.warnings).toContain('target_date_too_early')
-    expect(gen({ targetDate: '2030-01-01' }).plan.warnings).toContain('target_date_later')
+    const base = gen()
+    const later = gen({ targetDate: '2028-01-03' })
+    expect(later.plan.warnings).not.toContain('target_date_later')
+    expect(later.plan.weeks.length).toBeGreaterThan(base.plan.weeks.length + 10)
+    expect(validatePlanSafety(later.plan)).toEqual([])
   })
 
   it('детерминирован: одинаковый вход даёт одинаковый план', () => {

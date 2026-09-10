@@ -16,6 +16,12 @@ export interface Settings extends BaseEntity {
   remindersEnabled: boolean
   /** «HH:MM». */
   reminderTime: string
+  /** ИИ-тренер со своим ключом (BYOK). Ключ хранится только на устройстве и не попадает в бэкап. */
+  aiProvider: 'anthropic' | 'openai' | null
+  aiApiKey: string | null
+  /** Базовый URL для OpenAI-совместимых API (пусто = api.openai.com). */
+  aiBaseUrl: string
+  aiModel: string
 }
 
 export const SETTINGS_ID = 'settings'

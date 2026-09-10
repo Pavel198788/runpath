@@ -21,13 +21,14 @@ jobs:
       - run: npm run test
       - run: npm run build
       - name: Проверка офлайн-манифеста PWA
-        # Сборка обязана содержать service worker и manifest —
-        # без них офлайн-режим не работает. Полный e2e-офлайн тест
-        # (Playwright, авиарежим) добавим на этапе A5.
         run: |
           test -f dist/sw.js
           test -f dist/manifest.webmanifest
           grep -q '"start_url"' dist/manifest.webmanifest
+      - name: E2E — офлайн-режим и онбординг (Playwright)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
       - uses: actions/upload-artifact@v4
         with:
           name: dist

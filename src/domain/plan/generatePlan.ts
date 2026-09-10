@@ -31,6 +31,7 @@ import type {
 } from './types'
 import { PHASES } from './types'
 import { buildVolumeWeeks } from './volumes'
+import { stretchPlanToDate } from './stretch'
 
 /** Флаги здоровья, при которых план строится максимально осторожно. */
 const CONSERVATIVE_FLAGS = ['joints', 'cardio', 'overweight', 'pregnancy', 'diabetes']
@@ -139,7 +140,11 @@ export function generatePlan(input: PlanInput, options: PlanOptions): GeneratedP
     warnings,
     targetDate: input.targetDate,
   }
-  return { plan, workouts: workouts.sort((a, b) => a.date.localeCompare(b.date)) }
+  const generated = { plan, workouts: workouts.sort((a, b) => a.date.localeCompare(b.date)) }
+  // Желаемая дата позже — добавляем недели закрепления перед тейпером (объём не растёт).
+  if (input.targetDate && warnings.includes('target_date_later'))
+    return stretchPlanToDate(generated, input.targetDate, options.idGen)
+  return generated
 }
 
 export function isConservative(input: PlanInput): boolean {

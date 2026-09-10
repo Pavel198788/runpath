@@ -15,6 +15,8 @@ import {
   Toggle,
 } from '@/ui'
 import { requestNotificationPermission } from '@/app/useLocalReminders'
+import { BackupCard } from '@/features/backup/BackupCard'
+import { CHANGELOG } from '@/config/changelog'
 import { useUiStore, type ThemeMode } from '@/store/uiStore'
 import { getSettings, updateSettings } from '@/data/repositories/settingsRepo'
 import { deleteActivePlan, getActivePlan } from '@/data/repositories/planRepo'
@@ -61,16 +63,18 @@ export default function MorePage() {
         {t('more.profile')}
         <ChevronRight className="text-muted size-5" aria-hidden />
       </Link>
-      {(['exercises', 'injury', 'learn', 'calc', 'shoes', 'challenges'] as const).map((k) => (
-        <Link
-          key={k}
-          to={`/${k}`}
-          className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
-        >
-          {t(`more.${k}`)}
-          <ChevronRight className="text-muted size-5" aria-hidden />
-        </Link>
-      ))}
+      {(['coach', 'exercises', 'injury', 'learn', 'calc', 'shoes', 'challenges'] as const).map(
+        (k) => (
+          <Link
+            key={k}
+            to={`/${k}`}
+            className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+          >
+            {t(`more.${k}`)}
+            <ChevronRight className="text-muted size-5" aria-hidden />
+          </Link>
+        ),
+      )}
       <Link
         to="/import"
         className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
@@ -168,6 +172,34 @@ export default function MorePage() {
           </Button>
         </Card>
       )}
+
+      <BackupCard />
+
+      <Card className="space-y-2">
+        <CardTitle>{t('about.title')}</CardTitle>
+        <CardText>{t('about.body')}</CardText>
+        <CardText className="text-sm">
+          {t('about.language')}: {t('about.languageRu')}
+        </CardText>
+        <a
+          href="https://github.com/Pavel198788/runpath"
+          target="_blank"
+          rel="noreferrer"
+          className="text-accent text-sm font-medium"
+        >
+          {t('about.source')}
+        </a>
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium">{t('about.changelog')}</summary>
+          <ul className="text-muted mt-2 space-y-1">
+            {CHANGELOG.map((c) => (
+              <li key={c.version}>
+                <b>{c.version}</b> — {c.text}
+              </li>
+            ))}
+          </ul>
+        </details>
+      </Card>
 
       <Card className="space-y-2">
         <CardTitle>{t('disclaimer.title')}</CardTitle>
