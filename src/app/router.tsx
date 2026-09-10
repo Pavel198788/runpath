@@ -1,35 +1,48 @@
 /* eslint-disable react-refresh/only-export-components -- файл конфигурации маршрутов */
-import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { Suspense } from 'react'
+import { lazyWithRetry } from './lazyWithRetry'
+import { ErrorBoundary } from './ErrorBoundary'
 import { AppShell } from './layout/AppShell'
 
 // Экраны грузятся лениво — каждый маршрут отдельным чанком.
-const TodayPage = lazy(() => import('@/features/today/TodayPage'))
-const PlanPage = lazy(() => import('@/features/plan/PlanPage'))
-const ProgressPage = lazy(() => import('@/features/progress/ProgressPage'))
-const MorePage = lazy(() => import('@/features/more/MorePage'))
-const OnboardingPage = lazy(() => import('@/features/onboarding/OnboardingPage'))
-const WorkoutPage = lazy(() => import('@/features/workout/WorkoutPage'))
-const TimerPage = lazy(() => import('@/features/workout/TimerPage'))
-const LogWorkoutPage = lazy(() => import('@/features/workout/LogWorkoutPage'))
-const HistoryPage = lazy(() => import('@/features/history/HistoryPage'))
-const LogDetailPage = lazy(() => import('@/features/history/LogDetailPage'))
-const ImportPage = lazy(() => import('@/features/import/ImportPage'))
-const FreeRunPage = lazy(() => import('@/features/tracking/FreeRunPage'))
-const NutritionPage = lazy(() => import('@/features/nutrition/NutritionPage'))
-const RecipesPage = lazy(() => import('@/features/nutrition/RecipesPage'))
-const RaceDayPage = lazy(() => import('@/features/nutrition/RaceDayPage'))
-const ProfilePage = lazy(() => import('@/features/more/ProfilePage'))
-const ExercisesPage = lazy(() => import('@/features/exercises/ExercisesPage'))
-const InjuryPage = lazy(() => import('@/features/injury/InjuryPage'))
-const LearnPage = lazy(() => import('@/features/learn/LearnPage'))
-const LessonPage = lazy(() => import('@/features/learn/LessonPage'))
-const CalculatorsPage = lazy(() => import('@/features/calc/CalculatorsPage'))
-const ShoesPage = lazy(() => import('@/features/shoes/ShoesPage'))
-const ChallengesPage = lazy(() => import('@/features/gamification/ChallengesPage'))
-const CoachPage = lazy(() => import('@/features/coach/CoachPage'))
-const LevelTestPage = lazy(() => import('@/features/leveltest/LevelTestPage'))
-const AccountPage = lazy(() => import('@/features/account/AccountPage'))
+const TodayPage = lazyWithRetry(() => import('@/features/today/TodayPage'))
+const PlanPage = lazyWithRetry(() => import('@/features/plan/PlanPage'))
+const ProgressPage = lazyWithRetry(() => import('@/features/progress/ProgressPage'))
+const MorePage = lazyWithRetry(() => import('@/features/more/MorePage'))
+const OnboardingPage = lazyWithRetry(() => import('@/features/onboarding/OnboardingPage'))
+const WorkoutPage = lazyWithRetry(() => import('@/features/workout/WorkoutPage'))
+const TimerPage = lazyWithRetry(() => import('@/features/workout/TimerPage'))
+const LogWorkoutPage = lazyWithRetry(() => import('@/features/workout/LogWorkoutPage'))
+const HistoryPage = lazyWithRetry(() => import('@/features/history/HistoryPage'))
+const LogDetailPage = lazyWithRetry(() => import('@/features/history/LogDetailPage'))
+const ImportPage = lazyWithRetry(() => import('@/features/import/ImportPage'))
+const FreeRunPage = lazyWithRetry(() => import('@/features/tracking/FreeRunPage'))
+const NutritionPage = lazyWithRetry(() => import('@/features/nutrition/NutritionPage'))
+const RecipesPage = lazyWithRetry(() => import('@/features/nutrition/RecipesPage'))
+const RaceDayPage = lazyWithRetry(() => import('@/features/nutrition/RaceDayPage'))
+const ProfilePage = lazyWithRetry(() => import('@/features/more/ProfilePage'))
+const ExercisesPage = lazyWithRetry(() => import('@/features/exercises/ExercisesPage'))
+const InjuryPage = lazyWithRetry(() => import('@/features/injury/InjuryPage'))
+const LearnPage = lazyWithRetry(() => import('@/features/learn/LearnPage'))
+const LessonPage = lazyWithRetry(() => import('@/features/learn/LessonPage'))
+const CalculatorsPage = lazyWithRetry(() => import('@/features/calc/CalculatorsPage'))
+const ShoesPage = lazyWithRetry(() => import('@/features/shoes/ShoesPage'))
+const ChallengesPage = lazyWithRetry(() => import('@/features/gamification/ChallengesPage'))
+const CoachPage = lazyWithRetry(() => import('@/features/coach/CoachPage'))
+const LevelTestPage = lazyWithRetry(() => import('@/features/leveltest/LevelTestPage'))
+const AccountPage = lazyWithRetry(() => import('@/features/account/AccountPage'))
+
+/** Полноэкранный маршрут: своя обёртка загрузки и перехвата ошибок. */
+function FullScreen({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<p className="text-muted p-6 text-center">Загрузка…</p>}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
 
 export const router = createBrowserRouter(
   [
@@ -64,9 +77,10 @@ export const router = createBrowserRouter(
         { path: '*', element: <Navigate to="/today" replace /> },
       ],
     },
-    // Таймер — без нижней навигации, на весь экран.
-    { path: '/workout/:id/timer', element: <TimerPage /> },
-    { path: '/run', element: <FreeRunPage /> },
+    // Таймер и свободная пробежка — на весь экран, без нижней навигации.
+    // Своя обёртка Suspense обязательна: они вне AppShell.
+    { path: '/workout/:id/timer', element: <FullScreen>{<TimerPage />}</FullScreen> },
+    { path: '/run', element: <FullScreen>{<FreeRunPage />}</FullScreen> },
   ],
   // На GitHub Pages приложение живёт в подпапке — basename берём из base сборки.
   { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },

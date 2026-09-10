@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Card, CardTitle, Field, Input } from '@/ui'
+import { Button, Card, CardText, CardTitle, Field, Input } from '@/ui'
 import { FOODS, RECIPES } from '@content/nutrition'
 import { addNutritionEntry } from '@/data/repositories/nutritionRepo'
 
@@ -77,6 +77,7 @@ export function FoodPicker({ date, onClose }: Props) {
       <CardTitle>{t('nutrition.addFood')}</CardTitle>
       {!picked && (
         <>
+          <CardText className="text-muted text-xs">{t('nutrition.onlyIngredients')}</CardText>
           <Field label={t('nutrition.search')}>
             <Input
               autoFocus
@@ -92,13 +93,27 @@ export function FoodPicker({ date, onClose }: Props) {
                   type="button"
                   onClick={() => {
                     setPicked({ kind: 'food', id: f.id })
-                    setAmount('100')
+                    setAmount(String(f.portion.amount))
                   }}
-                  className="hover:bg-surface-2 flex w-full items-center justify-between rounded-lg px-2 py-2 text-left"
+                  className="hover:bg-surface-2 flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left"
                 >
-                  <span>{f.name}</span>
-                  <span className="text-muted text-xs">
-                    {f.kcal} {t('nutrition.calories')} / 100 {t(`nutrition.${f.per}`)}
+                  <span className="min-w-0">
+                    <span className="block truncate">{f.name}</span>
+                    <span className="text-muted block text-xs">
+                      {t('nutrition.portionShort', {
+                        label: f.portion.label,
+                        amount: f.portion.amount,
+                        unit: t(`nutrition.${f.per}`),
+                      })}
+                      {' · '}
+                      {t('nutrition.category.' + f.category)}
+                    </span>
+                  </span>
+                  <span className="text-muted shrink-0 text-right text-xs">
+                    {f.kcal} {t('nutrition.calories')}
+                    <span className="block">
+                      {t('nutrition.per100', { unit: t(`nutrition.${f.per}`) })}
+                    </span>
                   </span>
                 </button>
               </li>

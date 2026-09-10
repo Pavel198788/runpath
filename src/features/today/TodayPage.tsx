@@ -18,6 +18,7 @@ import {
 import { WorkoutRow } from '@/features/plan/WorkoutRow'
 import { formatDistance } from '@/domain/units/units'
 import { AdaptationCard } from './AdaptationCard'
+import { strengthRoutineFor } from '@/features/exercises/routines'
 import { CheckinCard } from './CheckinCard'
 import { useEffect } from 'react'
 import { closePastWorkouts } from '@/data/services/planMaintenance'
@@ -232,7 +233,10 @@ function MainWorkoutCard({ workout }: { workout: Workout }) {
         </Link>
       )}
       {workout.type === 'strength' && (
-        <Link to="/exercises?routine=strength_a" className="text-accent text-sm font-medium">
+        <Link
+          to={`/exercises?routine=${strengthRoutineFor(workout.weekIndex, 0)}`}
+          className="text-accent text-sm font-medium"
+        >
           {t('exercises.openStrength')}
         </Link>
       )}

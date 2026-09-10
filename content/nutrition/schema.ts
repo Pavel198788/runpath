@@ -15,15 +15,21 @@ export const FoodCategory = z.enum([
   'sweets',
   'drinks',
   'sport',
-  'dishes',
   'fats',
 ])
+
+/** Привычная мера продукта: сколько это в граммах и как называется («1 средний», «горсть»). */
+export const PortionSchema = z.object({
+  amount: z.number().min(1).max(1000),
+  label: z.string().min(1),
+})
 
 export const FoodSchema = z.object({
   id: z.string().regex(/^f-[0-9a-f]{8}$/),
   name: z.string().min(2),
   category: FoodCategory,
   per: z.enum(['g', 'ml']),
+  portion: PortionSchema,
   kcal: z.number().min(0).max(950),
   protein: z.number().min(0).max(100),
   fat: z.number().min(0).max(100),

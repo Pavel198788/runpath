@@ -60,6 +60,26 @@ const LEVEL_START: Record<PlanInput['activityLevel'], Phase> = {
 }
 
 /**
+ * Стартовая фаза по самой длинной пробежке. Цифры точнее, чем выбор из списка:
+ * человек, который бежит 8 км, начинает с фазы «10 км», а не с «5 км».
+ */
+export function phaseByLongestRun(km: number): Phase {
+  if (km < 2) return 'base'
+  if (km < 5) return 'k5'
+  if (km < 10) return 'k10'
+  if (km < 18) return 'half'
+  return 'marathon'
+}
+
+/**
+ * Нынешний недельный объём: длинная пробежка плюс остальные дни (обычно короче).
+ * Нужен, чтобы не удваивать нагрузку в первую же неделю тому, кто бегает редко.
+ */
+export function estimateWeeklyKm(longestRunKm: number, runsPerWeek: number): number {
+  return longestRunKm + Math.max(0, runsPerWeek - 1) * longestRunKm * 0.7
+}
+
+/**
  * Главная функция: профиль → план по неделям и список тренировок.
  * Чистая и детерминированная (дата и id приходят снаружи), поэтому легко тестируется.
  */
@@ -105,7 +125,7 @@ export function generatePlan(input: PlanInput, options: PlanOptions): GeneratedP
         carryVolume = (carryVolume * 60) / pace
         carryLong = (carryLong * 60) / pace
       }
-      const start = startVolumeFor(phase, carryVolume, spec)
+      const start = startVolumeFor(phase, carryVolume, spec, phase === phases[0] ? input : null)
       const result = buildVolumePhase(
         ctx,
         weeks.length,
@@ -156,7 +176,10 @@ export function isConservative(input: PlanInput): boolean {
 
 /** Список фаз от стартового уровня до цели. */
 export function phaseList(input: PlanInput, conservative: boolean): Phase[] {
-  const startPhase = LEVEL_START[input.activityLevel]
+  const startPhase =
+    input.longestRunKm && input.longestRunKm >= 2
+      ? phaseByLongestRun(input.longestRunKm)
+      : LEVEL_START[input.activityLevel]
   const endPhase = GOAL_END[input.goal]
   const startIdx = PHASES.indexOf(startPhase)
   const endIdx = Math.max(PHASES.indexOf(endPhase), startIdx)
@@ -308,6 +331,7 @@ function startVolumeFor(
   phase: Phase,
   carry: number,
   spec: PhaseSpec,
+  actual: { longestRunKm: number | null; runsPerWeek: number | null } | null,
 ): { volume: number; long: number } {
   const minimums: Partial<Record<Phase, { volume: number; long: number }>> = {
     k5: { volume: 90, long: 30 },
@@ -316,6 +340,20 @@ function startVolumeFor(
     marathon: { volume: 40, long: 16 },
   }
   const min = minimums[phase] ?? { volume: 0, long: 0 }
+
+  // Человек уже бегает: берём его реальные цифры, а не средний минимум фазы.
+  // Тому, кто бегает 8 км раз в неделю, не ставим сразу 15 км: длинную оставляем
+  // примерно как есть и добавляем лёгкие дни.
+  if (actual?.longestRunKm && spec.unit === 'km' && carry === 0) {
+    const runs = Math.max(1, actual.runsPerWeek ?? 3)
+    const long = Math.min(actual.longestRunKm, spec.longCap)
+    const volume = Math.min(
+      Math.max(estimateWeeklyKm(actual.longestRunKm, runs), long / 0.6),
+      spec.peakVolume,
+    )
+    return { volume, long: Math.min(long, volume * 0.6) }
+  }
+
   const volume = Math.min(Math.max(carry, min.volume), spec.peakVolume)
   return { volume, long: Math.min(min.long, spec.longCap) }
 }

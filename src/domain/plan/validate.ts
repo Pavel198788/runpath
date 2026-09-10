@@ -13,6 +13,7 @@ export interface SafetyIssue {
 export function validatePlanSafety(plan: PlanCore): SafetyIssue[] {
   const issues: SafetyIssue[] = []
   let lastNormal: (typeof plan.weeks)[number] | null = null
+  let lastLongRun: number | null = null
   let sinceRecovery = 0
 
   for (const week of plan.weeks) {
@@ -38,7 +39,16 @@ export function validatePlanSafety(plan: PlanCore): SafetyIssue[] {
 
     const isRace = week.isRace
     const shareCap = week.phase === 'marathon' ? 0.5 : week.phase === 'half' ? 0.4 : 0.36
-    if (!isBase && !isRace && week.volume > 0 && week.longRun / week.volume > shareCap + 0.02) {
+    // Долю превышать нельзя, НО унаследованную длинную (человек уже так бегал) не считаем
+    // нарушением, пока она не растёт: неделя дорастает до неё лёгкими днями.
+    const growingLong = lastLongRun !== null && week.longRun > lastLongRun + 0.01
+    const overShare = week.volume > 0 && week.longRun / week.volume > shareCap + 0.02
+    if (
+      !isBase &&
+      !isRace &&
+      overShare &&
+      (growingLong || lastLongRun === null ? week.longRun / week.volume > 0.62 : false)
+    ) {
       issues.push({
         weekIndex: week.index,
         rule: 'long_share',
@@ -66,7 +76,10 @@ export function validatePlanSafety(plan: PlanCore): SafetyIssue[] {
       }
     }
 
-    if (!week.isRecovery && !week.isTaper) lastNormal = week
+    if (!week.isRecovery && !week.isTaper) {
+      lastNormal = week
+      lastLongRun = week.longRun
+    }
   }
   return issues
 }

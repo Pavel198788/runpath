@@ -31,6 +31,10 @@ export interface UserProfile extends BaseEntity {
   healthFlags: HealthFlag[]
   availableDays: Weekday[]
   preferredTime: 'morning' | 'day' | 'evening' | null
+  /** Самая длинная пробежка за последний месяц, км (у тех, кто уже бегает). */
+  longestRunKm: number | null
+  /** Сколько раз в неделю бегает сейчас. */
+  runsPerWeek: number | null
   /** Максимальный пульс, если известен; иначе оценка по возрасту. */
   maxHr: number | null
   /** Цель по весу: мягкий дефицит только при 'lose'. */

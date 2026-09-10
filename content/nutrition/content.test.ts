@@ -18,7 +18,18 @@ describe('контент питания', () => {
           `${f.name}: ${computed} vs ${f.kcal}`,
         ).toBeLessThan(0.25)
     }
-    expect(FOODS.length).toBeGreaterThanOrEqual(250)
+    expect(FOODS.length).toBeGreaterThanOrEqual(200)
+    // Только ингредиенты и продукты: готовые блюда живут в рецептах.
+    for (const dish of ['Борщ', 'Плов', 'Пицца', 'Гречка с курицей', 'Оливье', 'Бургер', 'Суши']) {
+      expect(
+        FOODS.some((f) => f.name.toLowerCase().includes(dish.toLowerCase())),
+        dish,
+      ).toBe(false)
+    }
+    for (const f of FOODS) {
+      expect(f.portion.amount, f.name).toBeGreaterThan(0)
+      expect(f.portion.label.length, f.name).toBeGreaterThan(0)
+    }
   })
 
   it('рецепты валидны и покрывают ключевые теги', () => {

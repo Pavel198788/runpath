@@ -25,6 +25,8 @@ async function setup() {
       activityLevel: 'walk_30',
       goal: 'start_running',
       walkMinutes: 30,
+      longestRunKm: null,
+      runsPerWeek: null,
       healthFlags: [],
       birthYear: 1990,
       availableDays: [0, 2, 5],

@@ -42,8 +42,10 @@ export function buildVolumeWeeks(
     let longRun: number
     if (i === 0) {
       // Плато: первая неделя фазы = последняя неделя предыдущей.
+      // Длинную не режем: если человек уже бегает 8 км при 13 км в неделю,
+      // правильнее добавить лёгкие дни, чем урезать привычную пробежку.
       volume = lastNormalVolume
-      longRun = r(Math.min(lastNormalLong, spec.longShare * volume, spec.longCap))
+      longRun = r(Math.min(lastNormalLong, spec.longCap))
     } else if (isRecovery) {
       volume = r(lastNormalVolume * 0.75)
       longRun = r(lastNormalLong * 0.65)

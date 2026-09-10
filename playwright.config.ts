@@ -8,6 +8,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     ...devices['Pixel 5'],
+    // На macOS 13 браузеры Playwright не ставятся — используем системный Chrome.
+    ...(process.env.USE_SYSTEM_CHROME ? { channel: 'chrome' } : {}),
   },
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort',

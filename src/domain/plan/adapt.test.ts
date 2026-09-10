@@ -15,6 +15,8 @@ function makePlan() {
       activityLevel: 'walk_30',
       goal: 'half_marathon',
       walkMinutes: 30,
+      longestRunKm: null,
+      runsPerWeek: null,
       healthFlags: [],
       birthYear: 1990,
       availableDays: [0, 2, 5],

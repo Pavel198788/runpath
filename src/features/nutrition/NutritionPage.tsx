@@ -24,10 +24,16 @@ import { targetsFor } from '@/data/services/nutritionService'
 import { addDaysIso, todayIso } from '@/domain/dates/dates'
 import { totalsOf } from '@/domain/nutrition/totals'
 import { fuelingFor } from '@/domain/nutrition/fueling'
+import { reviewEating, type EatingDay } from '@/domain/nutrition/eatingReview'
+import { nutritionDaysBetween } from '@/data/repositories/nutritionRepo'
+import { dayContextFor } from '@/data/services/nutritionService'
+import { dayKind } from '@/domain/nutrition/targets'
+import { getActivePlan } from '@/data/repositories/planRepo'
 import type { LightMark } from '@/data/entities'
 import { humanDate, workoutTitle } from '@/features/workout/workoutText'
 import { cn } from '@/lib/cn'
 import { FoodPicker } from './FoodPicker'
+import { FOODS } from '@content/nutrition'
 
 const LIGHT: LightMark[] = ['normal', 'little', 'over']
 
@@ -39,6 +45,25 @@ export default function NutritionPage() {
   const [hot, setHot] = useState(false)
   const profile = useLiveQuery(async () => (await getProfile()) ?? null)
   const day = useLiveQuery(async () => (await getNutritionDay(date)) ?? null, [date])
+  // Картина недели по быстрым отметкам: ради неё эти кнопки и нужны.
+  const eating = useLiveQuery(async () => {
+    const from = addDaysIso(date, -6)
+    const plan = (await getActivePlan()) ?? null
+    const days = await nutritionDaysBetween(from, date)
+    const byDate = new Map(days.map((d) => [d.date, d.light]))
+    const week: EatingDay[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = addDaysIso(date, -i)
+      week.push({
+        date: d,
+        mark: byDate.get(d) ?? null,
+        kind: dayKind(await dayContextFor(d, plan)),
+      })
+    }
+    const tomorrow = dayKind(await dayContextFor(addDaysIso(date, 1), plan))
+    return { week, review: reviewEating(week, tomorrow) }
+  }, [date])
+
   const calc = useLiveQuery(
     async () => (profile ? await targetsFor(date, profile) : null),
     [date, profile?.id, profile?.weightKg, profile?.weightGoal],
@@ -240,6 +265,47 @@ export default function NutritionPage() {
           ))}
         </div>
         <p className="text-muted text-xs">{t('nutrition.lightHint')}</p>
+
+        {eating && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t('nutrition.week')}</p>
+            <div className="flex gap-1">
+              {eating.week.map((d) => (
+                <div key={d.date} className="flex-1 text-center">
+                  <div
+                    className={cn(
+                      'h-8 rounded-md border',
+                      d.mark === 'normal'
+                        ? 'bg-success/25 border-success/40'
+                        : d.mark === 'little'
+                          ? 'bg-warning/25 border-warning/40'
+                          : d.mark === 'over'
+                            ? 'bg-info/25 border-info/40'
+                            : 'bg-surface-2 border-border',
+                    )}
+                    title={d.mark ? t(`nutrition.marksLegend.${d.mark}`) : ''}
+                  />
+                  <span className="text-muted text-[10px]">{d.date.slice(8)}</span>
+                </div>
+              ))}
+            </div>
+            <p
+              className={cn(
+                'text-sm',
+                eating.review.verdict === 'under_hard_days' ||
+                  eating.review.verdict === 'under_often'
+                  ? 'text-danger'
+                  : eating.review.verdict === 'before_long' ||
+                      eating.review.verdict === 'over_often'
+                    ? 'text-warning'
+                    : 'text-muted',
+              )}
+            >
+              {t(`nutrition.verdict.${eating.review.verdict}`)}
+            </p>
+          </div>
+        )}
+        <p className="text-muted text-xs">{t('nutrition.dbSource', { count: FOODS.length })}</p>
 
         {picking ? (
           <FoodPicker date={date} onClose={() => setPicking(false)} />

@@ -8,7 +8,19 @@ export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    // Проверяем обновления при запуске и раз в час, иначе на телефоне можно
+    // месяцами сидеть на старой версии и ловить пустые экраны.
+    onRegisteredSW(_url, registration) {
+      if (!registration) return
+      const check = () => {
+        if (document.visibilityState === 'visible') void registration.update()
+      }
+      check()
+      setInterval(check, 60 * 60 * 1000)
+      document.addEventListener('visibilitychange', check)
+    },
+  })
 
   if (!needRefresh) return null
   return (

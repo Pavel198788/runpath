@@ -12,25 +12,35 @@ interface Props<T extends string> {
   ariaLabel: string
 }
 
-/** Переключатель из нескольких сегментов (тема, единицы). */
+/**
+ * Переключатель из нескольких сегментов (пол, тема, единицы).
+ * Выбранный сегмент заливается акцентным цветом: белое на светло-сером было почти не видно.
+ */
 export function Segmented<T extends string>({ value, options, onChange, ariaLabel }: Props<T>) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="bg-surface-2 flex rounded-xl p-1">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={cn(
-            'min-h-11 flex-1 rounded-lg text-sm font-medium transition-colors',
-            value === o.value ? 'bg-surface text-fg shadow-sm' : 'text-muted',
-          )}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div
+      role="radiogroup"
+      aria-label={ariaLabel}
+      className="bg-surface-2 flex gap-1 rounded-xl border border-border p-1"
+    >
+      {options.map((o) => {
+        const active = value === o.value
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              'min-h-11 flex-1 rounded-lg px-2 text-sm font-semibold transition-colors',
+              active ? 'bg-accent text-accent-fg shadow-sm' : 'text-muted hover:bg-surface',
+            )}
+          >
+            {o.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

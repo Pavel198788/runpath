@@ -13,7 +13,7 @@ interface FieldProps {
   className?: string | undefined
 }
 
-/** Подпись + подсказка + любой контрол. */
+/** Подпись + подсказка + одно поле ввода. Только для input/select/textarea. */
 export function Field({ label, hint, children, className }: FieldProps) {
   return (
     <label className={cn('block', className)}>
@@ -21,6 +21,21 @@ export function Field({ label, hint, children, className }: FieldProps) {
       {children}
       {hint && <span className="text-muted mt-1 block text-xs">{hint}</span>}
     </label>
+  )
+}
+
+/**
+ * То же оформление, но для группы кнопок (переключатели, списки выбора).
+ * Внутри <label> такие кнопки теряют доступное имя — их не «видят» скринридеры,
+ * поэтому здесь обычный блок, а название группы задаёт сам компонент через aria-label.
+ */
+export function FieldGroup({ label, hint, children, className }: FieldProps) {
+  return (
+    <div className={cn('block', className)}>
+      <span className="mb-1.5 block text-sm font-medium">{label}</span>
+      {children}
+      {hint && <span className="text-muted mt-1 block text-xs">{hint}</span>}
+    </div>
   )
 }
 

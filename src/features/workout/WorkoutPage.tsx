@@ -7,12 +7,27 @@ import { Badge, Button, Card, CardText, CardTitle, Field, Input, Page, PageHeade
 import { getWorkout, moveWorkout, setWorkoutStatus } from '@/data/repositories/workoutRepo'
 import { formatMinSec, formatDistance } from '@/domain/units/units'
 import { humanDate, minutesOf, segmentLabel, workoutTitle, workoutWhy } from './workoutText'
+import { RoutineList } from '@/features/exercises/RoutineList'
+import { strengthRoutineFor, warmupRoutineFor } from '@/features/exercises/routines'
+import { workoutsBetween } from '@/data/repositories/workoutRepo'
+import { addDaysIso } from '@/domain/dates/dates'
 
 export default function WorkoutPage() {
   const { t } = useTranslation()
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const workout = useLiveQuery(async () => (await getWorkout(id)) ?? null, [id])
+  // Комплекс ОФП чередуется, поэтому смотрим, какой это по счёту силовой день недели.
+  const strengthIndex = useLiveQuery(async () => {
+    if (!workout || workout.type !== 'strength') return 0
+    const weekStart = addDaysIso(workout.date, -6)
+    const week = await workoutsBetween(workout.planId, weekStart, addDaysIso(workout.date, 6))
+    const sameWeek = week.filter((w) => w.weekIndex === workout.weekIndex && w.type === 'strength')
+    return Math.max(
+      0,
+      sameWeek.findIndex((w) => w.id === workout.id),
+    )
+  }, [workout?.id, workout?.type])
   const [moving, setMoving] = useState(false)
   const [newDate, setNewDate] = useState('')
 
@@ -60,6 +75,20 @@ export default function WorkoutPage() {
         <CardText>{workoutWhy(workout.type, t)}</CardText>
       </Card>
 
+      {workout.type === 'strength' && (
+        <Card className="space-y-2">
+          <CardTitle>{t('exercises.whatToDo')}</CardTitle>
+          <RoutineList routine={strengthRoutineFor(workout.weekIndex, strengthIndex ?? 0)} />
+        </Card>
+      )}
+
+      {workout.type !== 'strength' && (
+        <Card className="space-y-2">
+          <CardTitle>{t('exercises.warmupBefore')}</CardTitle>
+          <RoutineList routine={warmupRoutineFor(workout.type)} />
+        </Card>
+      )}
+
       <Card className="space-y-2">
         <CardTitle>{t('workout.segments')}</CardTitle>
         <ol className="divide-border divide-y">
@@ -77,6 +106,13 @@ export default function WorkoutPage() {
           ))}
         </ol>
       </Card>
+
+      {workout.type !== 'strength' && (
+        <Card className="space-y-2">
+          <CardTitle>{t('exercises.cooldownAfter')}</CardTitle>
+          <RoutineList routine="cooldown" />
+        </Card>
+      )}
 
       {workout.status === 'planned' && (
         <div className="space-y-2">

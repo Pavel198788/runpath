@@ -88,6 +88,10 @@ export interface PlanInput {
   goal: 'start_running' | 'half_marathon' | 'marathon'
   /** Сколько минут человек может идти быстрым шагом без остановки (если знает). */
   walkMinutes: number | null
+  /** Самая длинная пробежка за последний месяц, км (для тех, кто уже бегает). */
+  longestRunKm: number | null
+  /** Сколько раз в неделю бегает сейчас. */
+  runsPerWeek: number | null
   healthFlags: string[]
   birthYear: number | null
   /** Доступные дни: 0 = пн … 6 = вс. Минимум 3. */

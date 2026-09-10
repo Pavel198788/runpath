@@ -54,6 +54,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
         navigateFallback: `${base}index.html`,
+        // Запросы за файлами кода и картинками не должны получать в ответ страницу —
+        // иначе экран молча не открывается.
+        navigateFallbackDenylist: [/\/assets\//, /\.[a-z0-9]+$/i],
         cleanupOutdatedCaches: true,
         // Новый SW берёт открытые страницы под контроль сразу после активации (важно для офлайна с первого визита).
         clientsClaim: true,

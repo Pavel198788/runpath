@@ -44,6 +44,8 @@ export default function LevelTestPage() {
         activityLevel: result.level,
         goal: profile.goal,
         walkMinutes: result.walkMinutes ?? 30,
+        longestRunKm: profile.longestRunKm,
+        runsPerWeek: profile.runsPerWeek,
         healthFlags: profile.healthFlags,
         birthYear: profile.birthYear,
         availableDays: profile.availableDays,

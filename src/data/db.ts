@@ -203,6 +203,19 @@ export class RunPathDB extends Dexie {
       outbox: 'key, collection, queuedAt',
       syncMeta: 'key',
     })
+
+    // v9: реальные цифры бегуна в профиле (длинная пробежка и частота).
+    this.version(9)
+      .stores({})
+      .upgrade(async (tx) => {
+        await tx
+          .table('profiles')
+          .toCollection()
+          .modify((p: Partial<UserProfile>) => {
+            p.longestRunKm ??= null
+            p.runsPerWeek ??= null
+          })
+      })
   }
 }
 

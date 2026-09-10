@@ -14,6 +14,8 @@ const base: PlanInput = {
   activityLevel: 'never_ran',
   goal: 'marathon',
   walkMinutes: 30,
+  longestRunKm: null,
+  runsPerWeek: null,
   healthFlags: [],
   birthYear: 1990,
   availableDays: [0, 2, 4, 5],

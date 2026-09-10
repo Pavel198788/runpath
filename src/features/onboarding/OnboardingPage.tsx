@@ -8,6 +8,7 @@ import {
   CardTitle,
   ChoiceList,
   Field,
+  FieldGroup,
   Input,
   MultiChoice,
   Page,
@@ -18,12 +19,21 @@ import {
 import type { ActivityLevel, Goal, HealthFlag, Sex, Weekday } from '@/data/entities'
 import { createProfile, getProfile, updateProfile } from '@/data/repositories/profileRepo'
 import { saveGeneratedPlan } from '@/data/repositories/planRepo'
-import { generatePlan, type GeneratedPlan } from '@/domain/plan'
+import { generatePlan, phaseByLongestRun, type GeneratedPlan } from '@/domain/plan'
 import { uuid } from '@/domain/ids/uuid'
 import { longDate } from '@/features/workout/workoutText'
 
 const STEPS = ['welcome', 'about', 'level', 'health', 'goal', 'days', 'summary'] as const
 type Step = (typeof STEPS)[number]
+
+/** В опросе спрашиваем просто «бегаю», а конкретный уровень выводим из километров. */
+type LevelChoice = 'never_ran' | 'walk_30' | 'run_walk' | 'runner'
+
+function activityLevelFrom(choice: LevelChoice, longestRunKm: number | null): ActivityLevel {
+  if (choice !== 'runner') return choice
+  const km = longestRunKm ?? 5
+  return km >= 10 ? 'run_10k' : km >= 5 ? 'run_5k' : 'run_walk'
+}
 
 interface Draft {
   disclaimer: boolean
@@ -31,8 +41,10 @@ interface Draft {
   sex: Sex | null
   heightCm: string
   weightKg: string
-  activityLevel: ActivityLevel | null
+  activityLevel: LevelChoice | null
   walkMinutes: string
+  longestRunKm: string
+  runsPerWeek: string
   healthFlags: HealthFlag[]
   goal: Goal | null
   targetDate: string
@@ -48,6 +60,8 @@ const initial: Draft = {
   weightKg: '',
   activityLevel: null,
   walkMinutes: '30',
+  longestRunKm: '',
+  runsPerWeek: '3',
   healthFlags: [],
   goal: null,
   targetDate: '',
@@ -75,6 +89,7 @@ export default function OnboardingPage() {
       case 'welcome':
         return draft.disclaimer
       case 'level':
+        if (draft.activityLevel === 'runner') return (num(draft.longestRunKm) ?? 0) >= 1
         return draft.activityLevel !== null
       case 'goal':
         return draft.goal !== null
@@ -90,9 +105,14 @@ export default function OnboardingPage() {
       // Строим план прямо здесь: это чистая функция, занимает миллисекунды.
       const plan = generatePlan(
         {
-          activityLevel: draft.activityLevel ?? 'never_ran',
+          activityLevel: activityLevelFrom(
+            draft.activityLevel ?? 'never_ran',
+            num(draft.longestRunKm),
+          ),
           goal: draft.goal ?? 'marathon',
           walkMinutes: num(draft.walkMinutes),
+          longestRunKm: draft.activityLevel === 'runner' ? num(draft.longestRunKm) : null,
+          runsPerWeek: draft.activityLevel === 'runner' ? num(draft.runsPerWeek) : null,
           healthFlags: draft.healthFlags,
           birthYear: num(draft.birthYear),
           availableDays: draft.availableDays,
@@ -114,7 +134,9 @@ export default function OnboardingPage() {
       sex: draft.sex,
       heightCm: num(draft.heightCm),
       weightKg: num(draft.weightKg),
-      activityLevel: draft.activityLevel ?? 'never_ran',
+      activityLevel: activityLevelFrom(draft.activityLevel ?? 'never_ran', num(draft.longestRunKm)),
+      longestRunKm: draft.activityLevel === 'runner' ? num(draft.longestRunKm) : null,
+      runsPerWeek: draft.activityLevel === 'runner' ? num(draft.runsPerWeek) : null,
       goal: draft.goal ?? 'marathon',
       targetDate: draft.targetDate || null,
       healthFlags: draft.healthFlags,
@@ -180,7 +202,7 @@ export default function OnboardingPage() {
               onChange={(e) => patch({ birthYear: e.target.value })}
             />
           </Field>
-          <Field label={t('onboarding.about.sex')}>
+          <FieldGroup label={t('onboarding.about.sex')} hint={t('onboarding.about.sexHint')}>
             <Segmented<Sex>
               ariaLabel={t('onboarding.about.sex')}
               value={draft.sex ?? ('' as Sex)}
@@ -188,10 +210,9 @@ export default function OnboardingPage() {
               options={[
                 { value: 'male', label: t('onboarding.about.sexOptions.male') },
                 { value: 'female', label: t('onboarding.about.sexOptions.female') },
-                { value: 'other', label: t('onboarding.about.sexOptions.other') },
               ]}
             />
-          </Field>
+          </FieldGroup>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t('onboarding.about.height')}>
               <Input
@@ -220,17 +241,60 @@ export default function OnboardingPage() {
       {step === 'level' && (
         <Card className="space-y-4">
           <CardTitle>{t('onboarding.level.title')}</CardTitle>
-          <ChoiceList<ActivityLevel>
+          <ChoiceList<LevelChoice>
             ariaLabel={t('onboarding.level.title')}
             value={draft.activityLevel}
             onChange={(activityLevel) => patch({ activityLevel })}
-            options={(['never_ran', 'walk_30', 'run_walk', 'run_5k', 'run_10k'] as const).map(
-              (v) => ({
-                value: v,
-                label: t(`onboarding.level.options.${v}`),
-              }),
-            )}
+            options={(['never_ran', 'walk_30', 'run_walk', 'runner'] as const).map((v) => ({
+              value: v,
+              label: t(`onboarding.level.options.${v}`),
+            }))}
           />
+          {draft.activityLevel === 'runner' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  label={t('onboarding.level.longestRun')}
+                  hint={t('onboarding.level.longestRunHint')}
+                >
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min={1}
+                    max={60}
+                    value={draft.longestRunKm}
+                    onChange={(e) => patch({ longestRunKm: e.target.value })}
+                  />
+                </Field>
+                <Field
+                  label={t('onboarding.level.runsPerWeek')}
+                  hint={t('onboarding.level.runsPerWeekHint')}
+                >
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={7}
+                    value={draft.runsPerWeek}
+                    onChange={(e) => patch({ runsPerWeek: e.target.value })}
+                  />
+                </Field>
+              </div>
+              {num(draft.longestRunKm) !== null && (
+                <div className="bg-surface-2 space-y-1 rounded-xl p-3 text-sm">
+                  <p>
+                    {t('onboarding.level.startsFrom', {
+                      phase: t(`phase.${phaseByLongestRun(num(draft.longestRunKm) ?? 5)}`),
+                      hint: t(`phase.hint.${phaseByLongestRun(num(draft.longestRunKm) ?? 5)}`),
+                    })}
+                  </p>
+                  {(num(draft.runsPerWeek) ?? 3) <= 2 && (
+                    <p className="text-muted">{t('onboarding.level.lowFrequency')}</p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
           {(draft.activityLevel === 'never_ran' || draft.activityLevel === 'walk_30') && (
             <Field
               label={t('onboarding.level.walkMinutes')}
@@ -320,7 +384,7 @@ export default function OnboardingPage() {
           {draft.availableDays.length < 3 && (
             <p className="text-danger text-sm">{t('onboarding.days.tooFew')}</p>
           )}
-          <Field label={`${t('onboarding.days.preferredTime')} (${t('common.optional')})`}>
+          <FieldGroup label={`${t('onboarding.days.preferredTime')} (${t('common.optional')})`}>
             <Segmented<'morning' | 'day' | 'evening'>
               ariaLabel={t('onboarding.days.preferredTime')}
               value={draft.preferredTime ?? ('' as 'morning')}
@@ -331,7 +395,7 @@ export default function OnboardingPage() {
                 { value: 'evening', label: t('onboarding.days.timeOptions.evening') },
               ]}
             />
-          </Field>
+          </FieldGroup>
         </Card>
       )}
 

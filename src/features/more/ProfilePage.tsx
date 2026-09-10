@@ -3,7 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft } from 'lucide-react'
-import { Button, Card, ChoiceList, Field, Input, Page, PageHeader, Segmented } from '@/ui'
+import {
+  Button,
+  Card,
+  ChoiceList,
+  Field,
+  FieldGroup,
+  Input,
+  Page,
+  PageHeader,
+  Segmented,
+} from '@/ui'
 import { getProfile, updateProfile } from '@/data/repositories/profileRepo'
 import type { Sex, UserProfile } from '@/data/entities'
 
@@ -98,7 +108,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           />
         </Field>
       </div>
-      <Field label={t('onboarding.about.sex')}>
+      <FieldGroup label={t('onboarding.about.sex')}>
         <Segmented<Sex>
           ariaLabel={t('onboarding.about.sex')}
           value={form.sex ?? ('' as Sex)}
@@ -106,10 +116,9 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           options={[
             { value: 'male', label: t('onboarding.about.sexOptions.male') },
             { value: 'female', label: t('onboarding.about.sexOptions.female') },
-            { value: 'other', label: t('onboarding.about.sexOptions.other') },
           ]}
         />
-      </Field>
+      </FieldGroup>
       <div>
         <p className="mb-1.5 text-sm font-medium">{t('profile.weightGoal')}</p>
         <ChoiceList<Goal>
