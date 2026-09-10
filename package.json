@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "icons": "node scripts/generate-icons.mjs",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postbuild": "cp dist/index.html dist/404.html"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

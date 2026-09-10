@@ -33,7 +33,7 @@ export default function MorePage() {
   const onWipe = async () => {
     if (window.confirm(t('more.deleteAllConfirm'))) {
       await wipeDatabase()
-      window.location.assign('/')
+      window.location.assign(import.meta.env.BASE_URL)
     }
   }
   const onRebuild = async () => {

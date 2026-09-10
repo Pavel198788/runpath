@@ -4,10 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 
+// Базовый путь: '/' на своём домене, '/runpath/' на GitHub Pages (VITE_BASE в окружении сборки).
+const base = process.env.VITE_BASE ?? '/'
+
 // Единая конфигурация сборки. PWA-часть: Workbox кэширует всю статику,
 // чтобы приложение открывалось без сети; карта-тайлы кэшируются отдельным
-// правилом (runtimeCaching) — понадобится на этапе A2 (GPS и карта).
+// правилом (runtimeCaching).
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -20,8 +24,8 @@ export default defineConfig({
         description:
           'Пошаговый путь новичка от первой прогулки до финиша марафона. Работает офлайн.',
         lang: 'ru',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#0f172a',
@@ -42,14 +46,14 @@ export default defineConfig({
             name: 'Сегодня',
             short_name: 'Сегодня',
             description: 'Тренировка на сегодня',
-            url: '/today',
+            url: `${base}today`,
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }],
           },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
-        navigateFallback: '/index.html',
+        navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

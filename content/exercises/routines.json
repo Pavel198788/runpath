@@ -1,0 +1,45 @@
+{
+  "warmup_basic": [
+    "ex-warmup-01",
+    "ex-warmup-02",
+    "ex-warmup-03",
+    "ex-warmup-04",
+    "ex-warmup-06",
+    "ex-warmup-09"
+  ],
+  "warmup_quality": [
+    "ex-warmup-01",
+    "ex-warmup-03",
+    "ex-warmup-04",
+    "ex-warmup-05",
+    "ex-warmup-07",
+    "ex-warmup-08",
+    "ex-warmup-10"
+  ],
+  "cooldown": [
+    "ex-cooldown-01",
+    "ex-cooldown-02",
+    "ex-stretch-01",
+    "ex-stretch-02",
+    "ex-stretch-03",
+    "ex-stretch-04",
+    "ex-stretch-05"
+  ],
+  "strength_a": [
+    "ex-strength-01",
+    "ex-strength-03",
+    "ex-strength-05",
+    "ex-strength-07",
+    "ex-strength-09",
+    "ex-strength-10"
+  ],
+  "strength_b": [
+    "ex-strength-02",
+    "ex-strength-04",
+    "ex-strength-06",
+    "ex-strength-08",
+    "ex-strength-12",
+    "ex-strength-13"
+  ],
+  "mobility_daily": ["ex-mobility-01", "ex-mobility-02", "ex-mobility-03", "ex-mobility-04"]
+}

@@ -41,10 +41,11 @@ export function useLocalReminders() {
       if (reg)
         await reg.showNotification('RunPath', {
           body,
-          icon: '/icons/icon-192.png',
+          icon: `${import.meta.env.BASE_URL}icons/icon-192.png`,
           tag: 'runpath-daily',
         })
-      else new Notification('RunPath', { body, icon: '/icons/icon-192.png' })
+      else
+        new Notification('RunPath', { body, icon: `${import.meta.env.BASE_URL}icons/icon-192.png` })
       try {
         localStorage.setItem(key, '1')
       } catch {
