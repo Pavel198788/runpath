@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, MoreHorizontal, Sun, TrendingUp } from 'lucide-react'
+import { Apple, CalendarDays, MoreHorizontal, Sun, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 const items = [
   { to: '/today', key: 'nav.today', Icon: Sun },
   { to: '/plan', key: 'nav.plan', Icon: CalendarDays },
+  { to: '/nutrition', key: 'nav.nutrition', Icon: Apple },
   { to: '/progress', key: 'nav.progress', Icon: TrendingUp },
   { to: '/more', key: 'nav.more', Icon: MoreHorizontal },
 ] as const

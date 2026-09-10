@@ -1,7 +1,7 @@
 # RunPath — PWA «от дивана до марафона»
 
 Local-first приложение на русском, ведёт новичка от первой прогулки до марафона.
-Полное ТЗ: `docs/SPEC.md`. Roadmap и текущий этап: `docs/ROADMAP.md`. Статус фич: `docs/FEATURES.md`.
+Полное ТЗ: `docs/SPEC.md`. Roadmap и текущий этап: `docs/ROADMAP.md`. Пошаговый бэклог: `docs/BACKLOG.md`. Статус фич: `docs/FEATURES.md`.
 
 ## Стек
 

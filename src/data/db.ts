@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
+  NutritionDay,
   Plan,
   PlanAdjustment,
   Settings,
@@ -29,6 +30,7 @@ export class RunPathDB extends Dexie {
   tracks!: EntityTable<Track, 'id'>
   wellness!: EntityTable<WellnessEntry, 'id'>
   planAdjustments!: EntityTable<PlanAdjustment, 'id'>
+  nutritionDays!: EntityTable<NutritionDay, 'id'>
 
   constructor(name = 'runpath') {
     super(name)
@@ -86,6 +88,28 @@ export class RunPathDB extends Dexie {
             s.autoPause ??= true
             s.remindersEnabled ??= false
             s.reminderTime ??= '18:00'
+          })
+      })
+
+    // v4 (A3): дневник питания; цель по весу в профиле.
+    this.version(4)
+      .stores({
+        profiles: 'id, updatedAt, deletedAt',
+        settings: 'id, updatedAt, deletedAt',
+        plans: 'id, isActive, updatedAt, deletedAt',
+        workouts: 'id, planId, date, weekIndex, updatedAt, deletedAt',
+        workoutLogs: 'id, workoutId, date, externalId, updatedAt, deletedAt',
+        tracks: 'id, logId, updatedAt, deletedAt',
+        wellness: 'id, date, updatedAt, deletedAt',
+        planAdjustments: 'id, planId, status, updatedAt, deletedAt',
+        nutritionDays: 'id, date, updatedAt, deletedAt',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('profiles')
+          .toCollection()
+          .modify((p: Partial<UserProfile>) => {
+            p.weightGoal ??= 'none'
           })
       })
   }

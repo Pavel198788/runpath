@@ -31,6 +31,8 @@ export interface UserProfile extends BaseEntity {
   healthFlags: HealthFlag[]
   availableDays: Weekday[]
   preferredTime: 'morning' | 'day' | 'evening' | null
+  /** Цель по весу: мягкий дефицит только при 'lose'. */
+  weightGoal: 'lose' | 'maintain' | 'none'
   /** Когда пользователь принял медицинский дисклеймер. */
   disclaimerAcceptedAt: string | null
   onboardingCompletedAt: string | null

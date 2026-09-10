@@ -120,6 +120,7 @@ export default function OnboardingPage() {
       healthFlags: draft.healthFlags,
       availableDays: draft.availableDays,
       preferredTime: draft.preferredTime,
+      weightGoal: 'none' as const,
       disclaimerAcceptedAt: now,
       onboardingCompletedAt: now,
     }

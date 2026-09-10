@@ -55,6 +55,13 @@ export default function MorePage() {
         <ChevronRight className="text-muted size-5" aria-hidden />
       </Link>
       <Link
+        to="/profile"
+        className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+      >
+        {t('more.profile')}
+        <ChevronRight className="text-muted size-5" aria-hidden />
+      </Link>
+      <Link
         to="/import"
         className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
       >

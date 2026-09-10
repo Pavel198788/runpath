@@ -16,6 +16,10 @@ const HistoryPage = lazy(() => import('@/features/history/HistoryPage'))
 const LogDetailPage = lazy(() => import('@/features/history/LogDetailPage'))
 const ImportPage = lazy(() => import('@/features/import/ImportPage'))
 const FreeRunPage = lazy(() => import('@/features/tracking/FreeRunPage'))
+const NutritionPage = lazy(() => import('@/features/nutrition/NutritionPage'))
+const RecipesPage = lazy(() => import('@/features/nutrition/RecipesPage'))
+const RaceDayPage = lazy(() => import('@/features/nutrition/RaceDayPage'))
+const ProfilePage = lazy(() => import('@/features/more/ProfilePage'))
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +36,10 @@ export const router = createBrowserRouter([
       { path: '/history', element: <HistoryPage /> },
       { path: '/history/:id', element: <LogDetailPage /> },
       { path: '/import', element: <ImportPage /> },
+      { path: '/nutrition', element: <NutritionPage /> },
+      { path: '/nutrition/recipes', element: <RecipesPage /> },
+      { path: '/nutrition/race', element: <RaceDayPage /> },
+      { path: '/profile', element: <ProfilePage /> },
       { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },
