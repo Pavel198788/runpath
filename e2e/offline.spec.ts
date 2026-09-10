@@ -24,8 +24,12 @@ test('приложение работает офлайн после первой
 
   // Данные пишутся в IndexedDB без сети: смена единиц сохраняется после перезагрузки.
   await page.getByRole('link', { name: 'Ещё' }).click()
-  await page.getByRole('radio', { name: 'Мили' }).click()
+  const miles = page.getByRole('radio', { name: 'Мили' })
+  await miles.click()
+  // Ждём, пока запись в базу дойдёт до интерфейса, и только потом перезагружаем.
+  await expect(miles).toHaveAttribute('aria-checked', 'true')
   await page.reload()
+  await page.getByRole('link', { name: 'Ещё' }).click()
   await expect(page.getByRole('radio', { name: 'Мили' })).toHaveAttribute('aria-checked', 'true')
   await context.setOffline(false)
 })
