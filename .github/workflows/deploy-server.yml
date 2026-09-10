@@ -1,0 +1,44 @@
+name: Deploy server (SFTP)
+
+# Ручной запуск: секреты SFTP задаются в настройках репозитория.
+# Файл .env на хостинге не трогаем — он лежит вне веб-корня и правится вручную.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только показать, что будет загружено
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, openssl, pdo_sqlite, curl
+          tools: composer:v2
+      - name: Установка зависимостей без dev-пакетов
+        working-directory: server
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+      - name: Проверка синтаксиса
+        working-directory: server
+        run: find src cron public -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Загрузка по SFTP
+        if: ${{ !inputs.dry_run }}
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT || 22 }}
+          local_path: './server/*'
+          remote_path: ${{ secrets.SFTP_REMOTE_PATH }}
+          exclude_list: 'tests,.phpunit.cache,storage/logs,*.md'
+      - name: Что делать дальше
+        run: |
+          echo "Загружено. На хостинге выполнить один раз:"
+          echo "  php vendor/bin/phinx migrate -e production"
+          echo "и добавить cron: php <путь>/cron/run.php каждые 5 минут"

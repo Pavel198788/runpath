@@ -17,6 +17,7 @@ import {
 import { requestNotificationPermission } from '@/app/useLocalReminders'
 import { BackupCard } from '@/features/backup/BackupCard'
 import { CHANGELOG } from '@/config/changelog'
+import { useSyncState } from '@/sync/useSync'
 import { useUiStore, type ThemeMode } from '@/store/uiStore'
 import { getSettings, updateSettings } from '@/data/repositories/settingsRepo'
 import { deleteActivePlan, getActivePlan } from '@/data/repositories/planRepo'
@@ -31,6 +32,7 @@ export default function MorePage() {
   const setTheme = useUiStore((s) => s.setTheme)
   const settings = useLiveQuery(getSettings)
   const plan = useLiveQuery(async () => (await getActivePlan()) ?? null)
+  const syncState = useSyncState()
 
   const onWipe = async () => {
     if (window.confirm(t('more.deleteAllConfirm'))) {
@@ -49,6 +51,20 @@ export default function MorePage() {
     <Page className="space-y-4">
       <PageHeader title={t('more.title')} subtitle={t('app.version', { version: APP_VERSION })} />
 
+      <Link
+        to="/account"
+        className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+      >
+        {t('more.account')}
+        <span className="text-muted flex items-center gap-1 text-sm font-normal">
+          {syncState.status === 'disabled'
+            ? ''
+            : syncState.email
+              ? t(`account.status.${syncState.status}`)
+              : t('account.status.signed_out')}
+          <ChevronRight className="size-5" aria-hidden />
+        </span>
+      </Link>
       <Link
         to="/history"
         className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"

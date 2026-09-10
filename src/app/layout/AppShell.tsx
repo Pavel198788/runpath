@@ -5,10 +5,12 @@ import { BottomNav } from './BottomNav'
 import { OfflineBanner } from './OfflineBanner'
 import { UpdatePrompt } from './UpdatePrompt'
 import { useLocalReminders } from '@/app/useLocalReminders'
+import { useAutoSync } from '@/sync/useSync'
 
 export function AppShell() {
   const { t } = useTranslation()
   useLocalReminders()
+  useAutoSync()
   return (
     <div className="min-h-dvh">
       <OfflineBanner />

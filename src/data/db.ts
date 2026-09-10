@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { OutboxItem, SyncMeta } from '@/sync/types'
 import type {
   Achievement,
   AiConversation,
@@ -39,6 +40,9 @@ export class RunPathDB extends Dexie {
   achievements!: EntityTable<Achievement, 'id'>
   challenges!: EntityTable<Challenge, 'id'>
   aiConversations!: EntityTable<AiConversation, 'id'>
+  /** Очередь исходящих изменений и состояние синхронизации (этап B). Не синхронизируются сами. */
+  outbox!: EntityTable<OutboxItem, 'key'>
+  syncMeta!: EntityTable<SyncMeta, 'key'>
 
   constructor(name = 'runpath') {
     super(name)
@@ -193,6 +197,12 @@ export class RunPathDB extends Dexie {
             p.maxHr ??= null
           })
       })
+
+    // v8: очередь синхронизации и её состояние (этап B).
+    this.version(8).stores({
+      outbox: 'key, collection, queuedAt',
+      syncMeta: 'key',
+    })
   }
 }
 

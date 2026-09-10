@@ -29,6 +29,7 @@ const ShoesPage = lazy(() => import('@/features/shoes/ShoesPage'))
 const ChallengesPage = lazy(() => import('@/features/gamification/ChallengesPage'))
 const CoachPage = lazy(() => import('@/features/coach/CoachPage'))
 const LevelTestPage = lazy(() => import('@/features/leveltest/LevelTestPage'))
+const AccountPage = lazy(() => import('@/features/account/AccountPage'))
 
 export const router = createBrowserRouter(
   [
@@ -59,6 +60,7 @@ export const router = createBrowserRouter(
         { path: '/challenges', element: <ChallengesPage /> },
         { path: '/coach', element: <CoachPage /> },
         { path: '/leveltest', element: <LevelTestPage /> },
+        { path: '/account', element: <AccountPage /> },
         { path: '*', element: <Navigate to="/today" replace /> },
       ],
     },

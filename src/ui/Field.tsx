@@ -8,9 +8,9 @@ import { cn } from '@/lib/cn'
 
 interface FieldProps {
   label: string
-  hint?: string
+  hint?: string | undefined
   children: ReactNode
-  className?: string
+  className?: string | undefined
 }
 
 /** Подпись + подсказка + любой контрол. */

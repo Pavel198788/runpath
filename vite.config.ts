@@ -55,6 +55,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
+        // Новый SW берёт открытые страницы под контроль сразу после активации (важно для офлайна с первого визита).
+        clientsClaim: true,
         runtimeCaching: [
           {
             // OSM-тайлы: кэшируем просмотренное, чтобы маршрут показывался офлайн.

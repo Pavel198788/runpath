@@ -8,7 +8,8 @@ import { getSettings } from '@/data/repositories/settingsRepo'
 import { db } from '@/data/db'
 import { touch, withMeta } from '@/data/repositories/helpers'
 import type { AiConversation } from '@/data/entities'
-import { createAiProvider, type AiMessage } from '@/ai/providers'
+import { createAiProvider, ProxyAiProvider, type AiMessage } from '@/ai/providers'
+import { useSyncState } from '@/sync/useSync'
 import { COACH_SYSTEM_PROMPT } from '@/ai/coachSystemPrompt'
 import { buildCoachContext } from '@/ai/context'
 import {
@@ -40,6 +41,8 @@ export default function CoachPage() {
   const [pending, setPending] = useState<
     Array<{ s: Suggestion; ok: boolean; reason?: string; applied?: boolean }>
   >([])
+  const [quota, setQuota] = useState<{ remaining: number; dailyLimit: number } | null>(null)
+  const syncState = useSyncState()
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -49,7 +52,9 @@ export default function CoachPage() {
 
   if (settings === undefined || conversation === undefined)
     return <Page>{t('common.loading')}</Page>
-  const provider = createAiProvider(settings)
+  const signedIn = syncState.status !== 'disabled' && syncState.status !== 'signed_out'
+  const provider = createAiProvider(settings, signedIn)
+  const viaProxy = provider instanceof ProxyAiProvider
 
   const send = async (text: string) => {
     if (!provider || !text.trim() || busy) return
@@ -86,6 +91,7 @@ export default function CoachPage() {
     } catch (e) {
       if (!controller.signal.aborted) setError(e instanceof Error ? e.message : String(e))
     }
+    if (provider instanceof ProxyAiProvider) setQuota(await provider.quota())
     const { text: clean, suggestions } = extractSuggestions(full)
     if (clean) {
       await db.aiConversations.put(
@@ -139,7 +145,17 @@ export default function CoachPage() {
 
       {provider && (
         <>
-          <CardText className="text-xs">{t('coach.disclaimer')}</CardText>
+          <CardText className="text-xs">
+            {t('coach.disclaimer')}
+            {viaProxy && ` ${t('coach.viaServer')}`}
+          </CardText>
+          {viaProxy && quota && (
+            <CardText className="text-xs">
+              {quota.remaining > 0
+                ? t('coach.quotaLeft', { n: quota.remaining })
+                : t('coach.quotaOver')}
+            </CardText>
+          )}
           {(!conversation || conversation.messages.length === 0) && (
             <div className="flex flex-wrap gap-2">
               {(['why_today', 'week_review', 'nutrition', 'motivation'] as const).map((k) => (

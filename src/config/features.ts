@@ -4,14 +4,12 @@
  * чтобы включать модули без правки кода.
  */
 export const features = {
-  /** Есть ли сервер вообще (аккаунты, синхронизация, прокси ИИ, push). Этап B. */
-  server: import.meta.env.VITE_FEATURE_SERVER === 'true',
+  /** Есть ли сервер (аккаунты, синхронизация, прокси ИИ, push). Включается адресом API при сборке. */
+  server: import.meta.env.VITE_FEATURE_SERVER === 'true' && Boolean(import.meta.env.VITE_API_URL),
   /** ИИ-тренер со своим ключом пользователя (BYOK). Этап A5. */
   aiByok: true,
-  /** GPS-трекинг. Этап A2. */
-  gps: false,
-  /** Питание. Этап A3. */
-  nutrition: false,
+  gps: true,
+  nutrition: true,
 } as const
 
 export type FeatureFlag = keyof typeof features

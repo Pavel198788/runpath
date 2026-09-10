@@ -1,13 +1,21 @@
 import { features } from '@/config/features'
+import { Api } from './api'
 import { NoopSync } from './noopSync'
+import { ServerSync } from './serverSync'
+import { installOutboxHooks } from './outbox'
 import type { SyncAdapter } from './types'
 
-/** Точка подключения серверной синхронизации как плагина. */
-export function createSyncAdapter(): SyncAdapter {
-  // На этапе B: if (features.server) return new ServerSync(...)
-  void features
-  return new NoopSync()
+/** Адрес API задаётся при сборке; пустой — сервера нет, работает NoopSync. */
+const API_URL = import.meta.env.VITE_API_URL ?? ''
+
+function create(): SyncAdapter {
+  if (!features.server || !API_URL) return new NoopSync()
+  installOutboxHooks()
+  return new ServerSync(new Api(API_URL.replace(/\/$/, '')))
 }
 
-export const sync = createSyncAdapter()
-export type { SyncAdapter, SyncStatus } from './types'
+export const sync = create()
+export const isServerSync = (s: SyncAdapter): s is ServerSync => s instanceof ServerSync
+export { Api, ApiError } from './api'
+export { ServerSync } from './serverSync'
+export type { SyncAdapter, SyncState, SyncStatus } from './types'
