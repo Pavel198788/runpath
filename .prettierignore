@@ -4,3 +4,6 @@ dev-dist
 coverage
 package-lock.json
 public/icons
+server/vendor
+server/storage
+server/.phpunit.cache
