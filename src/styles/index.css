@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+
+/*
+  Дизайн-токены. Tailwind v4: переменные ниже становятся утилитами
+  (bg-surface, text-fg, text-muted, bg-accent и т.д.).
+  Тёмная тема включается классом .dark на <html> (см. store/uiStore.ts).
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-fg: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-accent: #f97316;
+  --color-accent-fg: #ffffff;
+  --color-success: #16a34a;
+  --color-warning: #ca8a04;
+  --color-danger: #dc2626;
+  --color-info: #2563eb;
+
+  --radius-card: 1rem;
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+}
+
+/* Переопределение токенов для тёмной темы */
+.dark {
+  --color-bg: #0b1220;
+  --color-surface: #111a2e;
+  --color-surface-2: #1a2540;
+  --color-fg: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-border: #253352;
+  --color-accent: #fb923c;
+  --color-accent-fg: #0b1220;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    /* Отступы под «чёлку» и системные жесты на телефонах */
+    padding-top: env(safe-area-inset-top);
+  }
+  /* Крупные тап-зоны по умолчанию: приложение открывают на бегу */
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+  }
+  * {
+    @apply border-border;
+  }
+}
