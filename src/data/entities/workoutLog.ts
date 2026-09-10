@@ -34,4 +34,6 @@ export interface WorkoutLog extends BaseEntity {
   /** Идентификатор в источнике импорта — защита от дублей. */
   externalId: string | null
   name: string | null
+  /** Пара обуви (таблица shoes). */
+  shoeId: string | null
 }

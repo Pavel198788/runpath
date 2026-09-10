@@ -61,6 +61,16 @@ export default function MorePage() {
         {t('more.profile')}
         <ChevronRight className="text-muted size-5" aria-hidden />
       </Link>
+      {(['exercises', 'injury', 'learn', 'calc', 'shoes', 'challenges'] as const).map((k) => (
+        <Link
+          key={k}
+          to={`/${k}`}
+          className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"
+        >
+          {t(`more.${k}`)}
+          <ChevronRight className="text-muted size-5" aria-hidden />
+        </Link>
+      ))}
       <Link
         to="/import"
         className="bg-surface flex items-center justify-between rounded-xl border border-border px-4 py-3 font-medium"

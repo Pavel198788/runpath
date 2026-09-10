@@ -3,16 +3,9 @@ import type { WorkoutLog } from '../entities'
 import type { NewEntity } from '../entities/base'
 import { touch, withMeta } from './helpers'
 
-type LogInput = Omit<
-  NewEntity<WorkoutLog>,
-  'startTime' | 'avgHr' | 'elevationGainM' | 'splits' | 'trackId' | 'externalId' | 'name'
-> &
-  Partial<
-    Pick<
-      WorkoutLog,
-      'startTime' | 'avgHr' | 'elevationGainM' | 'splits' | 'trackId' | 'externalId' | 'name'
-    >
-  >
+type Optional =
+  'startTime' | 'avgHr' | 'elevationGainM' | 'splits' | 'trackId' | 'externalId' | 'name' | 'shoeId'
+type LogInput = Omit<NewEntity<WorkoutLog>, Optional> & Partial<Pick<WorkoutLog, Optional>>
 
 export async function addWorkoutLog(data: LogInput): Promise<WorkoutLog> {
   const log = withMeta<WorkoutLog>({
@@ -23,6 +16,7 @@ export async function addWorkoutLog(data: LogInput): Promise<WorkoutLog> {
     trackId: null,
     externalId: null,
     name: null,
+    shoeId: null,
     ...data,
   })
   await db.transaction('rw', db.workoutLogs, db.workouts, async () => {

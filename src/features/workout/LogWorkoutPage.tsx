@@ -28,6 +28,7 @@ import { db } from '@/data/db'
 import { touch } from '@/data/repositories/helpers'
 import { elevationGainM, splitsByKm } from '@/domain/geo/geo'
 import { formatDistance } from '@/domain/units/units'
+import { allShoes } from '@/data/repositories/shoeRepo'
 
 const TYPES: WorkoutType[] = [
   'walk',
@@ -64,6 +65,8 @@ export default function LogWorkoutPage() {
     async () => (workoutId ? ((await getWorkout(workoutId)) ?? null) : null),
     [workoutId],
   )
+  const shoes = useLiveQuery(async () => (await allShoes()).filter((s) => !s.retiredAt))
+  const [shoeId, setShoeId] = useState<string | null | undefined>(undefined)
   const pending = usePendingTrack((s) => s.pending)
   const setPending = usePendingTrack((s) => s.setPending)
 
@@ -111,6 +114,7 @@ export default function LogWorkoutPage() {
         pending?.startTime ??
         (timerResult ? new Date(Date.now() - timerResult.durationSec * 1000).toISOString() : null),
       elevationGainM: pending ? elevationGainM(pending.points) : null,
+      shoeId: shoeId === undefined ? (shoes?.find((s) => s.isDefault)?.id ?? null) : shoeId,
       splits: pending ? splitsByKm(pending.points) : [],
     })
     if (pending && pending.points.length > 1) {
@@ -185,6 +189,23 @@ export default function LogWorkoutPage() {
               value={minutes}
               onChange={(e) => setMinutes(e.target.value)}
             />
+          </Field>
+        )}
+        {shoes && shoes.length > 0 && effectiveType !== 'strength' && (
+          <Field label={t('log.shoe')}>
+            <Select
+              value={
+                shoeId === undefined ? (shoes.find((s) => s.isDefault)?.id ?? '') : (shoeId ?? '')
+              }
+              onChange={(e) => setShoeId(e.target.value || null)}
+            >
+              <option value="">{t('log.noShoe')}</option>
+              {shoes.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
           </Field>
         )}
         <Field label={t('log.distance')} hint={t('log.distanceHint')}>

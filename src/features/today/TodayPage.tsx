@@ -18,6 +18,8 @@ import {
 import { WorkoutRow } from '@/features/plan/WorkoutRow'
 import { formatDistance } from '@/domain/units/units'
 import { AdaptationCard } from './AdaptationCard'
+import { CheckinCard } from './CheckinCard'
+import { lessonOfWeek } from '@/features/learn/lessonOfWeek'
 import { Toggle } from '@/ui'
 import { getWellness, upsertWellness } from '@/data/repositories/wellnessRepo'
 import { allWorkoutLogs } from '@/data/repositories/workoutLogRepo'
@@ -117,6 +119,8 @@ export default function TodayPage() {
 
       {!planNotStarted && main && !wellness?.sick && <MainWorkoutCard workout={main} />}
 
+      {!planNotStarted && <CheckinCard date={today} mainWorkout={main} />}
+
       {!planNotStarted && !main && (
         <Card>
           <CardTitle>{todays.length ? t('today.done') : t('today.rest')}</CardTitle>
@@ -140,6 +144,21 @@ export default function TodayPage() {
           <h2 className="text-muted text-sm font-medium">{t('today.nextWorkout')}</h2>
           <WorkoutRow workout={nextFuture} />
         </section>
+      )}
+
+      {week && (
+        <Link
+          to={`/learn/${lessonOfWeek(week.phase, week.index - (plan.phases.find((p) => p.phase === week.phase)?.fromWeek ?? 0))?.id ?? ''}`}
+          className="bg-surface block rounded-xl border border-border px-4 py-3 text-sm font-medium"
+        >
+          {t('today.lessonLink', {
+            title:
+              lessonOfWeek(
+                week.phase,
+                week.index - (plan.phases.find((p) => p.phase === week.phase)?.fromWeek ?? 0),
+              )?.title ?? '',
+          })}
+        </Link>
       )}
 
       <div className="flex flex-col items-center gap-2">
@@ -179,6 +198,19 @@ function MainWorkoutCard({ workout }: { workout: Workout }) {
         </p>
       </div>
       <CardText>{workoutWhy(workout.type, t)}</CardText>
+      {workout.type !== 'strength' && (
+        <Link
+          to={`/exercises?routine=${workout.type === 'tempo' || workout.type === 'fartlek' ? 'warmup_quality' : 'warmup_basic'}`}
+          className="text-accent text-sm font-medium"
+        >
+          {t('today.warmupLink')}
+        </Link>
+      )}
+      {workout.type === 'strength' && (
+        <Link to="/exercises?routine=strength_a" className="text-accent text-sm font-medium">
+          {t('exercises.openStrength')}
+        </Link>
+      )}
       <div className="flex flex-col gap-2">
         <Button size="lg" fullWidth onClick={() => navigate(`/workout/${workout.id}/timer`)}>
           <Play className="size-5" aria-hidden /> {t('workout.start')}

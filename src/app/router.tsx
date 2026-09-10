@@ -20,6 +20,13 @@ const NutritionPage = lazy(() => import('@/features/nutrition/NutritionPage'))
 const RecipesPage = lazy(() => import('@/features/nutrition/RecipesPage'))
 const RaceDayPage = lazy(() => import('@/features/nutrition/RaceDayPage'))
 const ProfilePage = lazy(() => import('@/features/more/ProfilePage'))
+const ExercisesPage = lazy(() => import('@/features/exercises/ExercisesPage'))
+const InjuryPage = lazy(() => import('@/features/injury/InjuryPage'))
+const LearnPage = lazy(() => import('@/features/learn/LearnPage'))
+const LessonPage = lazy(() => import('@/features/learn/LessonPage'))
+const CalculatorsPage = lazy(() => import('@/features/calc/CalculatorsPage'))
+const ShoesPage = lazy(() => import('@/features/shoes/ShoesPage'))
+const ChallengesPage = lazy(() => import('@/features/gamification/ChallengesPage'))
 
 export const router = createBrowserRouter(
   [
@@ -41,6 +48,13 @@ export const router = createBrowserRouter(
         { path: '/nutrition/recipes', element: <RecipesPage /> },
         { path: '/nutrition/race', element: <RaceDayPage /> },
         { path: '/profile', element: <ProfilePage /> },
+        { path: '/exercises', element: <ExercisesPage /> },
+        { path: '/injury', element: <InjuryPage /> },
+        { path: '/learn', element: <LearnPage /> },
+        { path: '/learn/:id', element: <LessonPage /> },
+        { path: '/calc', element: <CalculatorsPage /> },
+        { path: '/shoes', element: <ShoesPage /> },
+        { path: '/challenges', element: <ChallengesPage /> },
         { path: '*', element: <Navigate to="/today" replace /> },
       ],
     },
