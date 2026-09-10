@@ -11,6 +11,8 @@ import { touch, withMeta } from '../repositories/helpers'
 import { decideAdjustment, restructurePlan, reviewWeek, type WeekReview } from '@/domain/plan/adapt'
 import { addDaysIso, mondayOf, toIsoDate } from '@/domain/dates/dates'
 import { uuid } from '@/domain/ids/uuid'
+import { estimateMaxHr, rpeFromAvgHr } from '@/domain/load/hrLoad'
+import { getProfile } from '../repositories/profileRepo'
 
 /**
  * Проверяет прошедшие недели активного плана и, если нужно, создаёт предложение
@@ -36,8 +38,17 @@ export async function evaluatePlan(
   const logs = await db.workoutLogs
     .filter((l) => l.deletedAt === null && l.workoutId !== null)
     .toArray()
+  // Усилие: ощущения, а если их нет — оценка по среднему пульсу с часов.
+  const profile = await getProfile()
+  const maxHr =
+    profile?.maxHr ??
+    (profile?.birthYear ? estimateMaxHr(new Date().getFullYear() - profile.birthYear) : null)
   const rpeByWorkout = new Map<string, number | null>()
-  for (const l of logs) if (l.workoutId) rpeByWorkout.set(l.workoutId, l.rpe)
+  for (const l of logs) {
+    if (!l.workoutId) continue
+    const byHr = l.avgHr && maxHr ? rpeFromAvgHr(l.avgHr, maxHr) : null
+    rpeByWorkout.set(l.workoutId, l.rpe ?? byHr)
+  }
 
   // Смотрим до 6 последних прошедших недель — этого хватает для правил «пропуск > 4».
   const window = elapsed.slice(-6)

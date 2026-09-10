@@ -174,6 +174,25 @@ export class RunPathDB extends Dexie {
             s.aiModel ??= ''
           })
       })
+
+    // v7: пульс — нагрузка по зонам у записи, максимальный пульс в профиле.
+    this.version(7)
+      .stores({})
+      .upgrade(async (tx) => {
+        await tx
+          .table('workoutLogs')
+          .toCollection()
+          .modify((l: Partial<WorkoutLog>) => {
+            l.hrLoad ??= null
+            l.timeInZones ??= null
+          })
+        await tx
+          .table('profiles')
+          .toCollection()
+          .modify((p: Partial<UserProfile>) => {
+            p.maxHr ??= null
+          })
+      })
   }
 }
 

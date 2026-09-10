@@ -1,0 +1,12 @@
+# Все запросы к API — в index.php (Slim-роутер). Файлы CHECK.php и cron/ доступны напрямую.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# Заголовки безопасности (дублируются в PHP на случай отсутствия mod_headers)
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "no-referrer"
+</IfModule>

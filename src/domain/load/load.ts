@@ -21,9 +21,12 @@ export interface LoadEntry {
   durationSec: number
   rpe: number | null
   type: WorkoutType
+  /** Нагрузка по пульсу, если есть — точнее ощущений. */
+  hrLoad?: number | null
 }
 
 export function sessionLoad(entry: LoadEntry): number {
+  if (entry.hrLoad !== null && entry.hrLoad !== undefined && entry.hrLoad > 0) return entry.hrLoad
   const rpe = entry.rpe ?? DEFAULT_RPE[entry.type]
   return Math.round((entry.durationSec / 60) * rpe)
 }

@@ -32,6 +32,7 @@ export function parseGpx(xml: string): ImportedActivity[] {
         t: start !== null && Number.isFinite(ts) ? (ts - start) / 1000 : points.length,
         alt: eleText ? Number(eleText) : null,
         acc: null,
+        hr,
       })
     }
     if (points.length === 0) continue

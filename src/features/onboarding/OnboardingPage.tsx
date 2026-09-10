@@ -121,6 +121,7 @@ export default function OnboardingPage() {
       availableDays: draft.availableDays,
       preferredTime: draft.preferredTime,
       weightGoal: 'none' as const,
+      maxHr: null,
       disclaimerAcceptedAt: now,
       onboardingCompletedAt: now,
     }

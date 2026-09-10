@@ -1,0 +1,42 @@
+{
+  "name": "runpath/server",
+  "description": "RunPath API — лёгкий PHP-бэкенд для shared-хостинга (аккаунты, синхронизация, ИИ-прокси, push, Strava, админка)",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-openssl": "*",
+    "slim/slim": "^4.14",
+    "slim/psr7": "^1.7",
+    "vlucas/phpdotenv": "^5.6",
+    "firebase/php-jwt": "^7.0",
+    "robmorgan/phinx": "^0.16",
+    "minishlink/web-push": "^9.0",
+    "guzzlehttp/guzzle": "^7.9"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "RunPath\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "RunPath\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "migrate": "phinx migrate -e production",
+    "migrate:test": "phinx migrate -e testing"
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true
+  }
+}

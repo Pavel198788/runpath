@@ -37,7 +37,13 @@ export default function TodayPage() {
   const load = useLiveQuery(async () => {
     const logs = await allWorkoutLogs()
     return acwr(
-      logs.map((l) => ({ date: l.date, durationSec: l.durationSec, rpe: l.rpe, type: l.type })),
+      logs.map((l) => ({
+        date: l.date,
+        durationSec: l.durationSec,
+        rpe: l.rpe,
+        type: l.type,
+        hrLoad: l.hrLoad,
+      })),
       today,
     )
   }, [today])

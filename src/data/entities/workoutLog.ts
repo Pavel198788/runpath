@@ -36,4 +36,7 @@ export interface WorkoutLog extends BaseEntity {
   name: string | null
   /** Пара обуви (таблица shoes). */
   shoeId: string | null
+  /** Нагрузка по пульсу (сопоставима с sRPE) и секунды в зонах 0–5, если был пульс по точкам. */
+  hrLoad: number | null
+  timeInZones: number[] | null
 }

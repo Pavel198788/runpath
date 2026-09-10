@@ -3,6 +3,8 @@ import { addWorkoutLog } from '../repositories/workoutLogRepo'
 import { saveTrack } from '../repositories/trackRepo'
 import { touch } from '../repositories/helpers'
 import { elevationGainM, splitsByKm } from '@/domain/geo/geo'
+import { estimateMaxHr, hrLoad, timeInZones } from '@/domain/load/hrLoad'
+import { getProfile } from '../repositories/profileRepo'
 import type { ImportedActivity } from '@/domain/import/types'
 import type { WorkoutType } from '@/domain/plan/types'
 
@@ -40,6 +42,10 @@ export async function isDuplicate(a: ImportedActivity): Promise<boolean> {
  */
 export async function importActivities(activities: ImportedActivity[]): Promise<ImportOutcome> {
   const outcome: ImportOutcome = { imported: 0, duplicates: 0, skipped: 0 }
+  const profile = await getProfile()
+  const maxHr =
+    profile?.maxHr ??
+    (profile?.birthYear ? estimateMaxHr(new Date().getFullYear() - profile.birthYear) : null)
   for (const a of activities) {
     if (a.sport === 'other' || a.durationSec <= 0) {
       outcome.skipped++
@@ -73,6 +79,7 @@ export async function importActivities(activities: ImportedActivity[]): Promise<
       splits: a.points.length ? splitsByKm(a.points) : [],
       externalId: a.externalId,
       name: a.name,
+      ...hrMetrics(a.points, maxHr),
     })
     if (a.points.length > 1) {
       const track = await saveTrack(log.id, a.points)
@@ -81,4 +88,17 @@ export async function importActivities(activities: ImportedActivity[]): Promise<
     outcome.imported++
   }
   return outcome
+}
+
+/** Время в зонах и нагрузка по пульсу, если в точках есть пульс и известен максимум. */
+function hrMetrics(
+  points: ImportedActivity['points'],
+  maxHr: number | null,
+): { hrLoad: number | null; timeInZones: number[] | null } {
+  if (!maxHr || !points.some((p) => p.hr)) return { hrLoad: null, timeInZones: null }
+  const zones = timeInZones(
+    points.map((p) => ({ t: p.t, hr: p.hr ?? null })),
+    maxHr,
+  )
+  return { hrLoad: hrLoad(zones), timeInZones: zones }
 }

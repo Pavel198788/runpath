@@ -97,6 +97,37 @@ export default function LogDetailPage() {
         </Card>
       )}
 
+      {log.timeInZones && log.timeInZones.some((z) => z > 0) && (
+        <Card>
+          <CardTitle className="mb-2">{t('gps.zones')}</CardTitle>
+          <ol className="space-y-1">
+            {log.timeInZones.map((sec, zone) =>
+              zone === 0 ? null : (
+                <li key={zone} className="flex items-center gap-2 text-sm">
+                  <span className="text-muted w-8">{t('gps.zone', { n: zone })}</span>
+                  <span className="bg-surface-2 h-5 flex-1 overflow-hidden rounded">
+                    <span
+                      className={
+                        ['bg-info', 'bg-success', 'bg-warning', 'bg-accent', 'bg-danger'][
+                          zone - 1
+                        ]! + ' block h-full rounded'
+                      }
+                      style={{ width: `${(sec / Math.max(1, ...log.timeInZones!)) * 100}%` }}
+                    />
+                  </span>
+                  <span className="w-14 text-right font-mono">{formatMinSec(sec)}</span>
+                </li>
+              ),
+            )}
+          </ol>
+          {log.hrLoad !== null && (
+            <CardText className="mt-2 text-xs">
+              {t('gps.hrLoad')}: {log.hrLoad}
+            </CardText>
+          )}
+        </Card>
+      )}
+
       {splits.length > 0 && (
         <Card>
           <CardTitle className="mb-2">{t('gps.splits')}</CardTitle>

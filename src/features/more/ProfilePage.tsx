@@ -40,6 +40,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
     weightKg: profile.weightKg?.toString() ?? '',
     heightCm: profile.heightCm?.toString() ?? '',
     birthYear: profile.birthYear?.toString() ?? '',
+    maxHr: profile.maxHr?.toString() ?? '',
     sex: profile.sex,
     weightGoal: (profile.weightGoal ?? 'none') as Goal,
   }))
@@ -51,6 +52,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
       weightKg: num(form.weightKg),
       heightCm: num(form.heightCm),
       birthYear: num(form.birthYear),
+      maxHr: num(form.maxHr),
       sex: form.sex,
       weightGoal: form.weightGoal,
     })
@@ -78,14 +80,24 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           />
         </Field>
       </div>
-      <Field label={t('onboarding.about.birthYear')}>
-        <Input
-          type="number"
-          inputMode="numeric"
-          value={form.birthYear}
-          onChange={(e) => setForm({ ...form, birthYear: e.target.value })}
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label={t('onboarding.about.birthYear')}>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={form.birthYear}
+            onChange={(e) => setForm({ ...form, birthYear: e.target.value })}
+          />
+        </Field>
+        <Field label={t('profile.maxHr')} hint={t('profile.maxHrHint')}>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={form.maxHr}
+            onChange={(e) => setForm({ ...form, maxHr: e.target.value })}
+          />
+        </Field>
+      </div>
       <Field label={t('onboarding.about.sex')}>
         <Segmented<Sex>
           ariaLabel={t('onboarding.about.sex')}

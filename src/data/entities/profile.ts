@@ -31,6 +31,8 @@ export interface UserProfile extends BaseEntity {
   healthFlags: HealthFlag[]
   availableDays: Weekday[]
   preferredTime: 'morning' | 'day' | 'evening' | null
+  /** Максимальный пульс, если известен; иначе оценка по возрасту. */
+  maxHr: number | null
   /** Цель по весу: мягкий дефицит только при 'lose'. */
   weightGoal: 'lose' | 'maintain' | 'none'
   /** Когда пользователь принял медицинский дисклеймер. */

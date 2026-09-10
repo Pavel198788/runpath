@@ -7,6 +7,8 @@ export interface TrackPoint {
   alt: number | null
   /** Горизонтальная точность, м (из GPS). */
   acc: number | null
+  /** Пульс, уд/мин (часы/датчик), если есть. */
+  hr?: number | null
 }
 
 const EARTH_RADIUS_M = 6371008.8
